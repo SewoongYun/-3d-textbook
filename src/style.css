@@ -83,6 +83,13 @@ fieldset.q legend { font-family: var(--serif); font-weight: 700; font-size: 18px
 .sliderrow { display: flex; gap: 12px; align-items: center; margin: 4px 0 10px; }
 .sliderrow input { flex: 1; accent-color: var(--blue); height: 28px; }
 .sliderrow output { min-width: 76px; text-align: right; font: 700 20px var(--serif); color: var(--blue); }
+sub, sup { font-size: .68em; line-height: 0; position: relative; vertical-align: baseline; }
+sub { top: .3em; } sup { top: -.45em; }
+.keybox { margin: 10px 0 4px; padding: 10px 12px; border-radius: 12px; background: rgba(242, 234, 214, .55); border: 1px solid var(--line); }
+.keybox .kl { font: 700 12px var(--sans); color: var(--red); letter-spacing: .06em; }
+.keybox .kf { font: 700 17px/1.5 var(--serif); }
+.keybox .kx { font: 700 15px/1.5 var(--serif); color: var(--blue); }
+.keybox .kx b { font: 700 12px var(--sans); margin-right: 6px; }
 .readout { width: 100%; border-collapse: collapse; margin: 12px 0 8px; font-size: 14px; }
 .readout caption { text-align: left; font-size: 12px; color: var(--muted); padding-bottom: 4px; }
 .readout th { text-align: left; font-weight: 500; padding: 5px 6px 5px 0; border-top: 1px solid var(--line); }
@@ -138,6 +145,10 @@ fieldset.q legend { font-family: var(--serif); font-weight: 700; font-size: 18px
 .toast { position: fixed; left: 50%; bottom: 84px; transform: translate(-50%, 10px); z-index: 25; background: var(--ink); color: var(--bg); padding: 8px 16px; border-radius: 999px; font-size: 14px; opacity: 0; pointer-events: none; transition: .25s; max-width: calc(100vw - 32px); }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+/* 확대·축소 버튼: 터치 화면이나 좁은 화면의 책 화면에서만 보임 */
+.zoomctl { display: none; position: fixed; right: 12px; bottom: 96px; z-index: 15; flex-direction: column; gap: 2px; padding: 4px; border-radius: 999px; }
+@media (pointer: coarse), (max-width: 760px) { body.book .zoomctl { display: flex; } }
+
 /* 목차 서랍 */
 .drawer { position: fixed; left: 16px; top: 16px; bottom: 84px; width: min(330px, calc(100vw - 32px)); z-index: 30; border-radius: 18px; padding: 16px 18px; overflow: auto; }
 .drawer h2 { margin: 0; font-size: 20px; }
@@ -185,7 +196,8 @@ body.book .lock { display: none; }
 
 /* ── 좁은 화면: 패널은 아래에서 올라오는 시트 ── */
 @media (max-width: 760px) {
-  body.book .panel.side, body.book .panel.try, body.book .panel.side.wide { left: 8px; right: 8px; top: auto; bottom: 74px; width: auto; max-height: 46vh; border-radius: 16px; }
+  body.book .panel.side, body.book .panel.try, body.book .panel.side.wide { left: 8px; right: 8px; top: auto; bottom: 74px; width: auto; max-height: 42vh; border-radius: 16px; }
+  body.book .zoomctl { top: 12px; bottom: auto; right: 10px; }
   .coverCard { left: 8px; right: 8px; top: auto; bottom: 74px; transform: none; width: auto; max-height: 60vh; overflow: auto; }
   .coverCard h1 { font-size: 28px; }
   .how { display: none; }

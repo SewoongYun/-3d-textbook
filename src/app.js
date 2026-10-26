@@ -3,7 +3,7 @@
   'use strict';
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
-  var L = LESSONS, MARK = PAGES.MARK;
+  var L = LESSONS, MARK = PAGES.MARK, mh = PAGES.mh;      /* mh: 첨자 유니코드 → <sub>/<sup> */
   var T = null, world = null;
 
   /* ───────── 저장소 (막혀 있어도 동작) ───────── */
@@ -87,11 +87,15 @@
   }
 
   /* ───────── 카메라 자세 ───────── */
+  function portraitPhone() { return window.innerWidth <= 760 && window.innerHeight > window.innerWidth; }
   function pose(name, keep) {
     if (!world) return;
+    S.pose = name;                        /* 화면 방향이 바뀌면 같은 자세로 다시 맞추려고 기억 */
     var W = world.W, mi = world.modelInfo;
     /* pts: 이 범위(책 전체·모형 등)가 패널을 뺀 빈 화면 안에 다 들어오도록 거리를 맞춤 */
     if (name === 'cover') world.poseTo({ t: [W / 2 - 0.3, 0.5, 0.35], theta: -0.45, phi: 0.95, R: 6.3, pts: 'cover' }, keep);
+    /* 6차: 세로 휴대폰은 펼친 두 쪽을 다 넣으면 너무 작아져서 글이 있는 왼쪽 쪽 하나를 크게 보여 줌 */
+    else if (name === 'spread' && portraitPhone()) world.poseTo({ t: [-W / 2, 0.3, 0.6], theta: 0.04, phi: 0.6, R: 4.6, pts: 'flap', min: 4 }, keep);
     else if (name === 'spread') world.poseTo({ t: [0, 0.3, 0.35], theta: 0, phi: 0.74, R: 7.6, pts: 'spread' }, keep);
     else if (name === 'model') world.poseTo({ t: [(mi.center.x + W / 2) / 2, (mi.center.y + world.TOP) / 2, mi.center.z / 2], theta: 0.3, phi: (mi.cam && mi.cam.bookPhi) || 0.98, R: Math.max(4, mi.radius * 1.25), pts: 'modelPage', min: 7 }, keep);   /* bookPhi: 레슨이 원하는 내려다보는 각도 */
     else if (name === 'low') world.poseTo({ t: mi.center, theta: 0.95, phi: 1.3, R: Math.max(3, mi.radius * 0.9), pts: 'model', min: 5 }, keep);
@@ -139,6 +143,8 @@
       else if (vis(tr)) t = tr.getBoundingClientRect().bottom + 8;   /* 접힌 실험 버튼 아래부터 */
     }
     world.setInsets({ l: l, r: r, b: b, t: t });
+    /* 확대·축소 버튼은 패널에 가리지 않게 빈 화면의 오른쪽 아래(좁은 화면은 오른쪽 위)에 */
+    var zc = $('#zoomCtl'); if (zc) { if (narrow) { zc.style.right = ''; zc.style.bottom = ''; } else { zc.style.right = (r ? r : 12) + 'px'; zc.style.bottom = (b + 10) + 'px'; } }
   }
 
   /* ───────── 조작 바 ───────── */
@@ -183,18 +189,18 @@
 
   /* ───────── 레슨 그리기 ───────── */
   function optHtml(name, opts, order) {
-    return order.map(function (oi, k) { return '<label class="opt"><input type="radio" name="' + name + '" value="' + oi + '"><span class="mark">' + MARK[k] + '</span><span>' + opts[oi].t + '</span></label>'; }).join('');
+    return order.map(function (oi, k) { return '<label class="opt"><input type="radio" name="' + name + '" value="' + oi + '"><span class="mark">' + MARK[k] + '</span><span>' + mh(opts[oi].t) + '</span></label>'; }).join('');
   }
   function resetLesson(i) {
     var d = L[i]; stopDemo(true);
     S.idx = i; S.seed = 1; S.pick = null; S.started = false; S.revealed = false; S.aPick = null; S.aChecked = false; S.aOk = false; S.tryMin = false; S.panel = null;
     S.order = shuffled(d.predict.options.length, d.id + 'p'); S.aOrder = shuffled(d.apply.options.length, d.id + 'a');
-    $('#unitTag').textContent = d.unit + ' · ' + (i + 1) + '/' + L.length; $('#lTitle').textContent = d.title; $('#lConcept').textContent = d.concept;
-    $('#terms').innerHTML = d.terms.map(function (t) { return '<dt>' + t[0] + '</dt><dd>' + t[1] + '</dd>'; }).join('');
-    $('#situation').innerHTML = d.situation; $('#predQ').textContent = d.predict.q;
+    $('#unitTag').textContent = d.unit + ' · ' + (i + 1) + '/' + L.length; $('#lTitle').textContent = d.title; $('#lConcept').innerHTML = mh(d.concept);
+    $('#terms').innerHTML = d.terms.map(function (t) { return '<dt>' + mh(t[0]) + '</dt><dd>' + mh(t[1]) + '</dd>'; }).join('');
+    $('#situation').innerHTML = mh(d.situation); $('#predQ').innerHTML = mh(d.predict.q);
     $('#predOpts').innerHTML = optHtml('pred', d.predict.options, S.order);
     $('#btnStart').disabled = true; $('#startHint').textContent = '답을 하나 고르면 실험을 시작할 수 있어요.';
-    $('#answerBox').innerHTML = ''; $('#aQ').textContent = d.apply.q; $('#aOpts').innerHTML = optHtml('app', d.apply.options, S.aOrder); $('#aResult').hidden = true; $('#aResult').innerHTML = ''; $('#btnCheck').disabled = true;
+    $('#answerBox').innerHTML = ''; $('#aQ').innerHTML = mh(d.apply.q); $('#aOpts').innerHTML = optHtml('app', d.apply.options, S.aOrder); $('#aResult').hidden = true; $('#aResult').innerHTML = ''; $('#btnCheck').disabled = true;
     $('#teacherBox').innerHTML = ''; $('#sourceBox').innerHTML = '';
     var sl = $('#slider'); sl.min = d.slider.min; sl.max = d.slider.max; sl.step = d.slider.step; sl.value = d.slider.value;
     document.title = d.title + ' · 확률과 통계 3D 교과서'; markToc();
@@ -226,6 +232,8 @@
   function arrive() {
     if (S.idx < 0) return;
     setPanel('predict'); layout();
+    var touch = false; try { touch = matchMedia('(pointer: coarse)').matches; } catch (e) { /* 무시 */ }
+    if (isBook() && (touch || window.innerWidth <= 760) && !prefs.pinchHint) { prefs.pinchHint = true; save(); toast('두 손가락으로 벌리면 확대, 함께 끌면 이동해요. 오른쪽 + − 버튼도 있어요.'); }
     if (!isBook()) window.scrollTo(0, 0);
     $('#lTitle').focus({ preventScroll: true });
   }
@@ -242,7 +250,7 @@
     $$('input[name=pred]').forEach(function (x) { x.disabled = true; });
     $('#btnStart').disabled = true; $('#startHint').textContent = '실험이 열렸어요. 모형이 책장 위로 일어서요!';
     $('#sliderLabel').textContent = d.slider.label;
-    $('#legend').innerHTML = (d.legend || []).map(function (q) { return '<span><i style="background:' + q[0] + '"></i>' + q[1] + '</span>'; }).join('');
+    $('#legend').innerHTML = (d.legend || []).map(function (q) { return '<span><i style="background:' + q[0] + '"></i>' + mh(q[1]) + '</span>'; }).join('');
     $('#omitted').textContent = '생략한 조건: ' + d.omitted; $('#svgFig').setAttribute('aria-label', d.svgAlt);
     var ab = $('#actions'); ab.innerHTML = '';
     (d.actions || []).forEach(function (a) { var b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost sm'; b.textContent = a.label; b.addEventListener('click', function () { S.seed++; refresh(); }); ab.appendChild(b); });
@@ -254,7 +262,10 @@
   function refresh(skip3d) {
     var d = cur(), v = val(), e = env();
     $('#sliderOut').textContent = d.slider.fmt(v); $('#slider').setAttribute('aria-valuetext', d.slider.fmt(v));
-    $('#readout').innerHTML = d.calc(v, e).map(function (r) { return '<tr' + (r[2] ? ' class="em"' : '') + '><th scope="row">' + r[0] + '</th><td>' + r[1] + '</td></tr>'; }).join('');
+    $('#readout').innerHTML = d.calc(v, e).map(function (r) { return '<tr' + (r[2] ? ' class="em"' : '') + '><th scope="row">' + mh(r[0]) + '</th><td>' + mh(r[1]) + '</td></tr>'; }).join('');
+    /* 핵심 식: 일반식(검정) + 지금 값 대입 예시(파랑) — 책장의 상자와 같은 내용 */
+    var key = typeof KEYS !== 'undefined' && KEYS[d.id];
+    $('#keyBox').innerHTML = key ? '<div class="kl">핵심 식</div><div class="kf">' + mh(key.f) + '</div><div class="kx"><b>예</b>' + mh(key.ex(d, v, e)) + '</div>' : '';
     var inner = d.svg(v, e); $('#svgFig').innerHTML = inner; $('#svgFig').setAttribute('viewBox', PAGES.fitSvg(inner).vb);
     if (!skip3d && world) world.updateModel(v, e);
     redrawPages();
@@ -277,7 +288,7 @@
     var html = '<p class="verdict ' + (got ? 'good' : 'bad') + '">' + (got ? '예측이 맞았어요! 🎉' : '예측과 달랐어요. 괜찮아요, 이유를 확인해 봐요.') + ' <span class="sub">내가 고른 답: ' + MARK[S.order.indexOf(S.pick)] + ' ' + opts[S.pick].t + '</span></p>';
     html += '<div class="ans"><h4>정답: ' + MARK[S.order.indexOf(ok)] + ' ' + opts[ok].t + '</h4><p>' + opts[ok].why + '</p></div><h4 class="wrongh">나머지 보기가 틀린 이유</h4><ul class="why">';
     S.order.forEach(function (oi, k) { if (oi !== ok) html += '<li' + (oi === S.pick ? ' class="mine"' : '') + '><b>' + MARK[k] + ' ' + opts[oi].t + '</b><br>' + opts[oi].why + '</li>'; });
-    $('#answerBox').innerHTML = html + '</ul>';
+    $('#answerBox').innerHTML = mh(html + '</ul>');
     renderNotes(d); redrawPages(); play('flap');
     if (world) { world.setFlap('open', true); pose('flap'); }
     setPanel('answer', true);
@@ -285,10 +296,10 @@
   }
   function renderNotes(d) {
     var t = (typeof TEACH !== 'undefined' && TEACH[d.id]) || { ask: [], simplify: '', misc: '', verify: '', data: '' };
-    $('#teacherBox').innerHTML = '<div class="notebox"><h4>수업에서 던질 질문</h4><ul>' + t.ask.map(function (q) { return '<li>' + q + '</li>'; }).join('') + '</ul><h4>모형이 단순화한 부분</h4><p>' + t.simplify + '</p><h4>자주 나오는 오개념</h4><p>' + t.misc + '</p><h4>계산을 확인한 방법</h4><p>' + t.verify + '</p></div>';
+    $('#teacherBox').innerHTML = mh('<div class="notebox"><h4>수업에서 던질 질문</h4><ul>' + t.ask.map(function (q) { return '<li>' + q + '</li>'; }).join('') + '</ul><h4>모형이 단순화한 부분</h4><p>' + t.simplify + '</p><h4>자주 나오는 오개념</h4><p>' + t.misc + '</p><h4>계산을 확인한 방법</h4><p>' + t.verify + '</p></div>');
     $('#sourceBox').innerHTML = '<table class="srctable"><tbody>' +
       '<tr><th scope="row">교과서 단원</th><td>' + d.source + '</td></tr>' +
-      '<tr><th scope="row">핵심 공식·정의</th><td>' + d.concept + '</td></tr>' +
+      '<tr><th scope="row">핵심 공식·정의</th><td>' + mh(d.concept) + '</td></tr>' +
       '<tr><th scope="row">수치의 출처</th><td>' + t.data + '</td></tr>' +
       '<tr><th scope="row">생략·가정한 조건</th><td>' + d.omitted + '</td></tr>' +
       '<tr><th scope="row">기준 교재</th><td>천재교육 「확률과 통계」(류희찬 외) 학생용·교사용 교과서의 용어·공식. 쪽수는 판에 따라 달라 단원 이름으로만 적었습니다.</td></tr>' +
@@ -315,7 +326,7 @@
     html += '<div class="ans"><h4>정답: ' + MARK[S.aOrder.indexOf(ok)] + ' ' + opts[ok].t + '</h4><p>' + opts[ok].why + '</p></div><h4 class="wrongh">다른 보기가 틀린 이유</h4><ul class="why">';
     S.aOrder.forEach(function (oi, k) { if (oi !== ok) html += '<li' + (oi === S.aPick ? ' class="mine"' : '') + '><b>' + MARK[k] + ' ' + opts[oi].t + '</b><br>' + opts[oi].why + '</li>'; });
     html += '</ul>' + (got ? (S.idx < L.length - 1 ? '<button type="button" class="btn primary" id="btnNextLesson">다음 레슨 ▶</button>' : '') : '<button type="button" class="btn ghost" id="btnRetry">다시 풀기</button>');
-    $('#aResult').innerHTML = html; $('#aResult').hidden = false;
+    $('#aResult').innerHTML = mh(html); $('#aResult').hidden = false;
     $$('input[name=app]').forEach(function (x) { x.disabled = true; }); $('#btnCheck').disabled = true;
     if (got) {
       var first = !stamps[d.id]; stamps[d.id] = true; store.set('mathbook2.stamps', stamps); markToc(); play('ok');
@@ -366,20 +377,38 @@
   function pauseDemo() { if (!demo) return; demo.paused = !demo.paused; toast(demo.paused ? '시연 일시정지 (스페이스로 계속)' : '시연 계속'); }
 
   /* ───────── 3D 화면 조작 ───────── */
+  /* 한 손가락(마우스) 끌기 = 돌리기, 두 손가락 = 벌려서 확대·모아서 축소 + 함께 끌어 옮기기,
+     마우스 오른쪽 버튼·Shift+끌기 = 옮기기, 휠 = 확대·축소, 두 번 누르기 = 시점 처음으로 */
   function bindCanvas() {
-    var cv = $('#scene'), drag = null, moved = 0, lastHover = 0;
-    cv.addEventListener('pointerdown', function (e) { drag = { x: e.clientX, y: e.clientY }; moved = 0; try { cv.setPointerCapture(e.pointerId); } catch (x) { /* 무시 */ } });
+    var cv = $('#scene'), drag = null, moved = 0, lastHover = 0, pts = {}, pinch = null, multi = false;
+    function two() { var k = Object.keys(pts); if (k.length < 2) return null; var a = pts[k[0]], b = pts[k[1]]; return { d: Math.max(20, Math.hypot(a.x - b.x, a.y - b.y)), x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; }
+    cv.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    cv.addEventListener('pointerdown', function (e) {
+      pts[e.pointerId] = { x: e.clientX, y: e.clientY }; try { cv.setPointerCapture(e.pointerId); } catch (x) { /* 무시 */ }
+      if (Object.keys(pts).length >= 2) { pinch = two(); multi = true; drag = null; cv.classList.add('drag'); return; }
+      drag = { x: e.clientX, y: e.clientY, pan: e.button === 2 || e.shiftKey }; moved = 0;
+    });
     cv.addEventListener('pointermove', function (e) {
-      if (drag) {
-        var dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY; moved += Math.abs(dx) + Math.abs(dy);
-        if (moved > 6) { cv.classList.add('drag'); world.orbit(-dx * 0.006, -dy * 0.004); }
+      if (pts[e.pointerId]) { pts[e.pointerId].x = e.clientX; pts[e.pointerId].y = e.clientY; }
+      if (pinch) {
+        var p = two(); if (!p) return;
+        world.orbit(0, 0, pinch.d / p.d); world.pan(p.x - pinch.x, p.y - pinch.y); pinch = p;
         return;
       }
+      if (drag) {
+        var dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY; moved += Math.abs(dx) + Math.abs(dy);
+        if (moved > 6) { cv.classList.add('drag'); if (drag.pan) world.pan(dx, dy); else world.orbit(-dx * 0.006, -dy * 0.004); }
+        return;
+      }
+      if (e.pointerType !== 'mouse') return;
       var now = performance.now(); if (now - lastHover < 90) return; lastHover = now;
       var h = world.pick(e.clientX, e.clientY);
       cv.classList.toggle('hot', !!h && (h.kind === 'flap' || (h.kind === 'model' && S.started) || S.idx < 0));
     });
     var up = function (e) {
+      delete pts[e.pointerId];
+      if (Object.keys(pts).length < 2) pinch = null;
+      if (multi) { if (!Object.keys(pts).length) { multi = false; cv.classList.remove('drag'); } drag = null; return; }   /* 두 손가락 동작 뒤에는 누르기로 치지 않음 */
       cv.classList.remove('drag'); if (!drag) return; drag = null;
       if (moved > 6 || e.type === 'pointercancel') return;
       var h = world.pick(e.clientX, e.clientY);
@@ -391,7 +420,7 @@
       else if (h.kind === 'right' && !S.started) setPanel('predict', true);
     };
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
-    cv.addEventListener('wheel', function (e) { e.preventDefault(); world.orbit(0, 0, e.deltaY > 0 ? 1.1 : 0.9); }, { passive: false });
+    cv.addEventListener('wheel', function (e) { e.preventDefault(); world.orbit(0, 0, Math.pow(1.0015, MX.clamp(e.deltaY, -120, 120))); }, { passive: false });   /* 트랙패드 핀치(ctrl+휠)도 같은 방식으로 부드럽게 */
     cv.addEventListener('dblclick', function () { world.resetUser(); });
     cv.addEventListener('keydown', function (e) {
       var k = e.key, hnd = true;
@@ -445,7 +474,10 @@
     $$('[data-teacher]').forEach(function (b) { b.addEventListener('click', function () { openTeacher(b.getAttribute('data-teacher')); }); });
     $('#tabT').addEventListener('click', function () { teacherTab('t'); });
     $('#tabS').addEventListener('click', function () { teacherTab('s'); });
-    $$('[data-close]').forEach(function (b) { b.addEventListener('click', function () { S.panel = null; layout(); if (S.started) pose('model'); }); });
+    $$('[data-close]').forEach(function (b) { b.addEventListener('click', function () {
+      S.panel = null; layout(); if (S.started) pose('model');
+      if (window.innerWidth <= 760 && !prefs.reopenHint) { prefs.reopenHint = true; save(); toast('책장을 누르면 창이 다시 열려요.'); }
+    }); });
     $('#btnOpen').addEventListener('click', function () { goLesson(0); });
     $('#btnCoverToc').addEventListener('click', function () { toggleToc(true); });
     $('#btnToc').addEventListener('click', function () { toggleToc(); });
@@ -464,6 +496,9 @@
       prefs.theme = dark ? 'light' : 'dark'; save(); applyTheme();
     });
     $('#btnTeach').addEventListener('click', function () { openTeacher('t'); });
+    $('#zIn').addEventListener('click', function () { if (world) world.orbit(0, 0, 0.78); });
+    $('#zOut').addEventListener('click', function () { if (world) world.orbit(0, 0, 1.28); });
+    $('#zHome').addEventListener('click', function () { if (world) world.resetUser(); });
     $('#btnMode').addEventListener('click', function () { stopDemo(true); setMode(isBook() ? 'text' : 'book', true); });
     window.addEventListener('hashchange', function () { toggleToc(false); route(); });
     document.addEventListener('keydown', function (e) {
@@ -476,7 +511,7 @@
         if (e.key === 'ArrowLeft' && !S.busy && S.idx >= 0) goLesson(S.idx - 1);
       }
     });
-    var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(layout, 120); });
+    var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { layout(); if (S.pose && !demo) pose(S.pose, true); }, 120); });
     if (window.matchMedia) { try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme); } catch (e) { /* 무시 */ } }
   }
 

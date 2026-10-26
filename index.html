@@ -94,6 +94,13 @@ fieldset.q legend { font-family: var(--serif); font-weight: 700; font-size: 18px
 .sliderrow { display: flex; gap: 12px; align-items: center; margin: 4px 0 10px; }
 .sliderrow input { flex: 1; accent-color: var(--blue); height: 28px; }
 .sliderrow output { min-width: 76px; text-align: right; font: 700 20px var(--serif); color: var(--blue); }
+sub, sup { font-size: .68em; line-height: 0; position: relative; vertical-align: baseline; }
+sub { top: .3em; } sup { top: -.45em; }
+.keybox { margin: 10px 0 4px; padding: 10px 12px; border-radius: 12px; background: rgba(242, 234, 214, .55); border: 1px solid var(--line); }
+.keybox .kl { font: 700 12px var(--sans); color: var(--red); letter-spacing: .06em; }
+.keybox .kf { font: 700 17px/1.5 var(--serif); }
+.keybox .kx { font: 700 15px/1.5 var(--serif); color: var(--blue); }
+.keybox .kx b { font: 700 12px var(--sans); margin-right: 6px; }
 .readout { width: 100%; border-collapse: collapse; margin: 12px 0 8px; font-size: 14px; }
 .readout caption { text-align: left; font-size: 12px; color: var(--muted); padding-bottom: 4px; }
 .readout th { text-align: left; font-weight: 500; padding: 5px 6px 5px 0; border-top: 1px solid var(--line); }
@@ -149,6 +156,10 @@ fieldset.q legend { font-family: var(--serif); font-weight: 700; font-size: 18px
 .toast { position: fixed; left: 50%; bottom: 84px; transform: translate(-50%, 10px); z-index: 25; background: var(--ink); color: var(--bg); padding: 8px 16px; border-radius: 999px; font-size: 14px; opacity: 0; pointer-events: none; transition: .25s; max-width: calc(100vw - 32px); }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+/* 확대·축소 버튼: 터치 화면이나 좁은 화면의 책 화면에서만 보임 */
+.zoomctl { display: none; position: fixed; right: 12px; bottom: 96px; z-index: 15; flex-direction: column; gap: 2px; padding: 4px; border-radius: 999px; }
+@media (pointer: coarse), (max-width: 760px) { body.book .zoomctl { display: flex; } }
+
 /* 목차 서랍 */
 .drawer { position: fixed; left: 16px; top: 16px; bottom: 84px; width: min(330px, calc(100vw - 32px)); z-index: 30; border-radius: 18px; padding: 16px 18px; overflow: auto; }
 .drawer h2 { margin: 0; font-size: 20px; }
@@ -196,7 +207,8 @@ body.book .lock { display: none; }
 
 /* ── 좁은 화면: 패널은 아래에서 올라오는 시트 ── */
 @media (max-width: 760px) {
-  body.book .panel.side, body.book .panel.try, body.book .panel.side.wide { left: 8px; right: 8px; top: auto; bottom: 74px; width: auto; max-height: 46vh; border-radius: 16px; }
+  body.book .panel.side, body.book .panel.try, body.book .panel.side.wide { left: 8px; right: 8px; top: auto; bottom: 74px; width: auto; max-height: 42vh; border-radius: 16px; }
+  body.book .zoomctl { top: 12px; bottom: auto; right: 10px; }
   .coverCard { left: 8px; right: 8px; top: auto; bottom: 74px; transform: none; width: auto; max-height: 60vh; overflow: auto; }
   .coverCard h1 { font-size: 28px; }
   .how { display: none; }
@@ -218,6 +230,12 @@ body.book .lock { display: none; }
   <canvas id="scene" tabindex="0" role="img" aria-label="책상 위에 놓인 확률과 통계 3D 교과서. 끌어서 시점을 돌리고, 휠로 확대·축소할 수 있어요."></canvas>
 </div>
 <p class="loading" id="loading" role="status">책을 꺼내는 중…</p>
+<!-- 터치 화면·좁은 화면용 확대·축소 버튼 (두 손가락으로도 됨) -->
+<div class="zoomctl glass" id="zoomCtl" role="group" aria-label="3D 확대·축소">
+  <button type="button" class="ib" id="zIn" aria-label="확대"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button type="button" class="ib" id="zOut" aria-label="축소"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+  <button type="button" class="ib" id="zHome" aria-label="시점 처음으로"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 3-6.2M4 4v5h5"/></svg></button>
+</div>
 
 <main id="main">
   <!-- 표지 카드 -->
@@ -268,6 +286,7 @@ body.book .lock { display: none; }
             <button type="button" class="btn ghost sm" id="btnPause" aria-pressed="false">⏸ 움직임 멈춤</button>
             <span id="actions" class="row wrap"></span>
           </div>
+          <div class="keybox" id="keyBox" aria-live="polite"></div>
           <table class="readout" aria-live="polite"><caption>계산 결과</caption><tbody id="readout"></tbody></table>
           <div class="legend" id="legend"></div>
           <details class="fig2d"><summary>2D 그림과 생략한 조건</summary><svg id="svgFig" viewBox="0 0 420 220" role="img" aria-label=""></svg><p class="small" id="omitted"></p></details>
@@ -441,9 +460,9 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
 
   /* ───────── 1. 원순열 ───────── */
   LESSONS.push({
-    id: 'circ', unit: UNIT, title: '원순열', concept: '서로 다른 n개를 원형으로 배열하는 경우의 수',
-    source: '교과서 Ⅰ-1 여러 가지 순열 (원순열)',
-    terms: [['순열', '순서를 생각하며 늘어놓는 방법'], ['원순열', '원 모양으로 늘어놓는 순열. 돌려서 겹치는 배열은 한 가지로 센다']],
+    id: 'circ', unit: UNIT, title: '원순열', concept: '서로 다른 n개를 원형으로 배열하는 원순열의 수는 (n−1)!',
+    source: 'Ⅰ. 경우의 수 › 순열과 조합 › 원순열',
+    terms: [['순열', '서로 다른 n개에서 r개를 택하여 일렬로 나열하는 것'], ['원순열', '서로 다른 것을 원형으로 배열하는 순열. 회전하여 일치하는 것은 같은 것으로 본다']],
     situation: '가족 4명(A·B·C·D)이 둥근 식탁에 둘러앉습니다. 자리에 번호는 없고, 모두 한 칸씩 옆으로 옮겨 앉아도 <b>누구 옆에 누가 앉았는지</b>는 그대로입니다.',
     predict: {
       q: 'A·B·C·D 4명이 원탁에 앉는 서로 다른 방법은 모두 몇 가지일까요?',
@@ -513,9 +532,9 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
 
   /* ───────── 2. 중복순열 ───────── */
   LESSONS.push({
-    id: 'rep', unit: UNIT, title: '중복순열', concept: '중복을 허용하여 r개를 택해 나열하는 경우의 수',
-    source: '교과서 Ⅰ-1 여러 가지 순열 (중복순열)',
-    terms: [['중복순열', '같은 것을 여러 번 뽑아도 된다고 하고 일렬로 나열하는 순열. 서로 다른 n개에서 r개를 뽑으면 n^r']],
+    id: 'rep', unit: UNIT, title: '중복순열', concept: '서로 다른 n개에서 중복을 허락하여 r개를 택하는 중복순열의 수 ₙΠᵣ = nʳ',
+    source: 'Ⅰ. 경우의 수 › 순열과 조합 › 중복순열',
+    terms: [['중복순열', '서로 다른 n개에서 중복을 허락하여 r개를 택하는 순열. 그 수를 기호 ₙΠᵣ로 나타내며 ₙΠᵣ = nʳ']],
     situation: '신호판에 깃발을 꽂는 칸이 r개 있습니다. 깃발은 <b>빨강·파랑·초록</b> 3가지 색이고, 같은 색을 여러 칸에 꽂아도 됩니다.',
     predict: {
       q: '칸이 3개일 때와 4개일 때를 비교합니다. 칸을 한 개 더 늘리면 만들 수 있는 신호의 수는 어떻게 될까요?',
@@ -602,9 +621,9 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
 
   /* ───────── 3. 같은 것이 있는 순열 ───────── */
   LESSONS.push({
-    id: 'dup', unit: UNIT, title: '같은 것이 있는 순열', concept: '같은 것을 구별하지 않고 일렬로 나열하는 경우의 수',
-    source: '교과서 Ⅰ-1 여러 가지 순열 (같은 것이 있는 순열)',
-    terms: [['같은 것이 있는 순열', '서로 같은 것이 섞여 있어 자리를 바꿔도 달라지지 않는 순열. n!÷(같은 것끼리의 줄 세우기 수)']],
+    id: 'dup', unit: UNIT, title: '같은 것이 있는 순열', concept: 'n개 중에서 같은 것이 각각 p개, q개, …, r개씩 있을 때, n개를 일렬로 나열하는 순열의 수는 n!/(p!q!⋯r!)',
+    source: 'Ⅰ. 경우의 수 › 순열과 조합 › 같은 것이 있는 순열',
+    terms: [['같은 것이 있는 순열', 'n개 중에서 같은 것이 각각 p개, q개, …, r개씩 있을 때, n개를 일렬로 나열하는 순열. 그 수는 n!/(p!q!⋯r!) (단, p+q+⋯+r=n)']],
     situation: '구슬 5개를 일렬로 놓습니다. 그중 <b>k개는 똑같은 빨간 구슬</b>이고, 나머지는 서로 다른 색입니다. 빨간 구슬끼리 자리를 바꿔도 보기에는 달라지지 않습니다.',
     predict: {
       q: '5개가 모두 다르면 5!=120가지입니다. 이 중 3개가 똑같은 빨간 구슬일 때 서로 다른 배열은 몇 가지일까요?',
@@ -676,12 +695,12 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
 
   /* ───────── 4. 중복조합 ───────── */
   LESSONS.push({
-    id: 'comb', unit: UNIT, title: '중복조합', concept: '중복을 허용하여 r개를 택하는 조합의 수',
-    source: '교과서 Ⅰ-2 중복조합',
-    terms: [['조합', '순서를 생각하지 않고 고르는 방법'], ['중복조합', '같은 것을 여러 번 골라도 되는 조합. 서로 다른 n개에서 r개를 고르면 ₙHᵣ = ₙ₊ᵣ₋₁Cᵣ']],
+    id: 'comb', unit: UNIT, title: '중복조합', concept: '서로 다른 n개에서 중복을 허락하여 r개를 택하는 중복조합의 수 ₙHᵣ = ₙ₊ᵣ₋₁Cᵣ',
+    source: 'Ⅰ. 경우의 수 › 순열과 조합 › 중복조합',
+    terms: [['조합', '서로 다른 n개에서 순서를 생각하지 않고 r개를 택하는 것'], ['중복조합', '서로 다른 n개에서 중복을 허락하여 r개를 택하는 조합. 그 수를 기호 ₙHᵣ로 나타내며 ₙHᵣ = ₙ₊ᵣ₋₁Cᵣ']],
     situation: '과일 가게에서 <b>사과·배·귤</b> 3종류 중 r개를 고릅니다. 같은 종류를 여러 개 담아도 되고, 담는 순서는 상관없습니다.',
     predict: {
-      q: '3종류의 과일에서 3개를 고르는 방법(순서 없음, 같은 종류 중복 가능)은 모두 몇 가지일까요?',
+      q: '3종류의 과일에서 3개를 고르는 방법(순서는 생각하지 않고, 같은 종류를 중복하여 골라도 됨)은 모두 몇 가지일까요?',
       options: [
         { t: '27가지 (3³)', ok: false, why: '고르는 순서까지 구별하는 중복순열의 값입니다. 사과·사과·배와 배·사과·사과는 담긴 과일이 같으므로 한 가지입니다.' },
         { t: '1가지 (₃C₃)', ok: false, why: '서로 다른 3개를 모두 고르는 한 가지뿐인 경우입니다. 같은 종류를 중복해서 고르는 경우가 빠졌습니다.' },
@@ -714,7 +733,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
       options: [
         { t: '10개', ok: false, why: '₃H₃=₅C₃입니다. 변수를 3개로 본 값인데, 이 방정식에는 변수가 4개(x, y, z, w) 있습니다.' },
         { t: '24개', ok: false, why: '₄P₃입니다. 값을 서로 다르게 고르는 순열이어서, 같은 값을 여러 번 쓰는 해(예: 1, 1, 1, 0)가 빠졌습니다.' },
-        { t: '20개', ok: true, why: '서로 다른 4개의 변수 중에서 중복을 허용하여 3개를 고르는 방법과 같습니다. ₄H₃=₆C₃=20개입니다.' },
+        { t: '20개', ok: true, why: '서로 다른 4개의 변수 중에서 중복을 허락하여 3개를 택하는 방법과 같습니다. ₄H₃=₆C₃=20개입니다.' },
         { t: '64개', ok: false, why: '4³입니다. 순서를 구별하는 중복순열의 값으로, 합이 3이어야 한다는 조건이 반영되지 않았습니다.' }
       ]
     },
@@ -759,8 +778,8 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
   /* ───────── 5. 이항정리 ───────── */
   LESSONS.push({
     id: 'binom', unit: UNIT, title: '이항정리와 파스칼의 삼각형', concept: '(a+b)ⁿ의 전개식의 계수는 조합의 수 ₙCᵣ',
-    source: '교과서 Ⅰ-3 이항정리',
-    terms: [['이항정리', '(a+b)ⁿ을 전개하는 공식'], ['이항계수', '전개식에서 각 항 앞의 수 ₙCᵣ'], ['파스칼의 삼각형', '이항계수를 삼각형 모양으로 늘어놓은 표']],
+    source: 'Ⅰ. 경우의 수 › 이항정리',
+    terms: [['이항정리', '(a+b)ⁿ = ₙC₀aⁿ + ₙC₁aⁿ⁻¹b + ⋯ + ₙCᵣaⁿ⁻ʳbʳ + ⋯ + ₙCₙbⁿ'], ['이항계수', '이항정리의 전개식에서 각 항의 계수 ₙC₀, ₙC₁, …, ₙCₙ'], ['일반항', '전개식의 각 항 ₙCᵣaⁿ⁻ʳbʳ'], ['파스칼의 삼각형', '이항계수를 삼각형 모양으로 배열한 것. ₙ₋₁Cᵣ₋₁ + ₙ₋₁Cᵣ = ₙCᵣ']],
     situation: '(a+b)⁴ = (a+b)(a+b)(a+b)(a+b)를 전개합니다. 네 개의 괄호에서 <b>a 또는 b 중 하나씩</b> 골라 곱한 것을 모두 더하는 일입니다.',
     predict: {
       q: '(a+b)⁴을 전개했을 때 a²b² 항의 계수는 얼마일까요?',
@@ -891,8 +910,8 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
   /* ───────── 6. 통계적 확률 ───────── */
   LESSONS.push({
     id: 'stat', unit: UNIT, title: '통계적 확률과 수학적 확률', concept: '시행 횟수가 커질수록 상대도수가 일정한 값에 가까워진다',
-    source: '교과서 Ⅱ-1 확률의 뜻 (수학적 확률, 통계적 확률)',
-    terms: [['시행', '주사위 던지기처럼 같은 조건에서 되풀이할 수 있는 실험'], ['상대도수', '(사건이 일어난 횟수) ÷ (시행 횟수)'], ['통계적 확률', '시행 횟수를 한없이 크게 할 때 상대도수가 가까워지는 값'], ['수학적 확률', '모든 경우가 일어날 가능성이 같을 때 (사건의 경우의 수) ÷ (전체 경우의 수)']],
+    source: 'Ⅱ. 확률 › 확률의 뜻과 활용 › 수학적 확률과 통계적 확률',
+    terms: [['시행', '같은 조건에서 반복할 수 있고, 그 결과가 우연에 의하여 결정되는 실험이나 관찰'], ['표본공간·근원사건', '어떤 시행에서 일어날 수 있는 모든 결과의 집합이 표본공간 S, 한 개의 원소로 이루어진 사건이 근원사건'], ['수학적 확률', '표본공간 S의 각 근원사건이 일어날 가능성이 모두 같을 때, 사건 A가 일어날 확률 P(A) = n(A)/n(S)'], ['통계적 확률', '같은 시행을 n번 반복할 때 사건 A가 일어난 횟수를 rₙ이라 하면, n이 충분히 클 때 상대도수 rₙ/n이 가까워지는 일정한 값']],
     situation: '공정한 주사위를 던져 <b>6의 눈</b>이 나온 비율(상대도수)을 기록합니다. 던진 횟수가 많아지면 이 비율은 어떻게 변할까요? (3D는 컴퓨터로 대신 던진 모의실험입니다.)',
     predict: {
       q: '던지는 횟수를 10번에서 10000번까지 늘리면, 6의 눈이 나온 상대도수는 어떻게 될까요?',
@@ -964,8 +983,8 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
   /* ───────── 7. 확률의 덧셈정리 ───────── */
   LESSONS.push({
     id: 'add', unit: UNIT, title: '확률의 덧셈정리', concept: 'P(A∪B) = P(A) + P(B) − P(A∩B)',
-    source: '교과서 Ⅱ-2 확률의 덧셈정리',
-    terms: [['사건 A∪B', 'A 또는 B가 일어나는 사건 (합사건)'], ['사건 A∩B', 'A와 B가 동시에 일어나는 사건 (곱사건)'], ['표본공간', '일어날 수 있는 모든 결과의 모임']],
+    source: 'Ⅱ. 확률 › 확률의 뜻과 활용 › 확률의 덧셈정리',
+    terms: [['사건 A∪B', '사건 A 또는 사건 B가 일어나는 사건'], ['사건 A∩B', '사건 A와 사건 B가 동시에 일어나는 사건'], ['배반사건', 'A∩B=∅, 곧 동시에 일어나지 않는 두 사건. 이때 P(A∪B) = P(A) + P(B)'], ['표본공간', '어떤 시행에서 일어날 수 있는 모든 결과의 집합']],
     situation: '학생 100명 중에서 한 명을 임의로 뽑습니다(가상의 조사). <b>수학 수업을 들은 학생 60명(A)</b>, <b>과학 수업을 들은 학생 50명(B)</b>이고, 둘 다 들은 학생 수는 아직 모릅니다.',
     predict: {
       q: '뽑힌 학생이 수학 또는 과학 수업을 들었을 확률 P(A∪B)는 얼마일까요?',
@@ -997,7 +1016,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
       q: 'P(A)=1/2, P(B)=1/3, P(A∩B)=1/6일 때, P(A∪B)의 값은 얼마일까요?',
       options: [
         { t: '5/6', ok: false, why: '1/2+1/3만 더한 값입니다. 겹치는 부분 P(A∩B)=1/6을 한 번 빼야 합니다.' },
-        { t: '1/6', ok: false, why: '이것은 P(A∩B)의 값입니다. 합사건 A∪B의 확률은 이보다 큽니다.' },
+        { t: '1/6', ok: false, why: '이것은 P(A∩B)의 값입니다. 사건 A∪B의 확률은 이보다 큽니다.' },
         { t: '2/3', ok: true, why: 'P(A∪B)=P(A)+P(B)−P(A∩B)=1/2+1/3−1/6=3/6+2/6−1/6=4/6=2/3입니다.' },
         { t: '1/3', ok: false, why: '1/2−1/6처럼 일부만 계산한 값입니다. 세 값을 모두 사용한 덧셈정리의 결과가 아닙니다.' }
       ]
@@ -1024,8 +1043,8 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
   /* ───────── 8. 여사건의 확률 (생일 문제) ───────── */
   LESSONS.push({
     id: 'comp', unit: UNIT, title: '여사건의 확률', concept: 'P(Aᶜ) = 1 − P(A) 로 “적어도 하나”의 확률 구하기',
-    source: '교과서 Ⅱ-2 확률의 덧셈정리 (여사건의 확률, 생활 속 수학 쏙: 생일이 같을 확률)',
-    terms: [['여사건 Aᶜ', 'A가 일어나지 않는 사건'], ['적어도 하나', '“하나 이상”이라는 뜻. 여사건(하나도 없다)으로 구하면 편하다']],
+    source: 'Ⅱ. 확률 › 확률의 뜻과 활용 › 여사건의 확률 (생일이 같을 확률)',
+    terms: [['여사건 Aᶜ', '사건 A가 일어나지 않는 사건'], ['여사건의 확률', 'P(Aᶜ) = 1 − P(A)'], ['적어도 하나', '“하나 이상”이라는 뜻. 여사건(하나도 없다)의 확률을 이용하면 편하다']],
     situation: '반 학생 k명 중에 <b>생일이 같은 학생이 있을 확률</b>을 구합니다. 1년은 365일로 보고, 태어난 날은 모두 같은 가능성이라고 가정합니다.',
     predict: {
       q: '학생이 25명일 때, 생일이 같은 두 학생이 적어도 한 쌍 있을 확률은 얼마쯤일까요?',
@@ -1099,8 +1118,8 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
   /* ───────── 9. 조건부확률 ───────── */
   LESSONS.push({
     id: 'cond', unit: UNIT, title: '조건부확률', concept: 'P(B|A) = P(A∩B) ÷ P(A)',
-    source: '교과서 Ⅱ-3 조건부확률',
-    terms: [['조건부확률 P(B|A)', '사건 A가 일어났다고 알았을 때, 사건 B가 일어날 확률'], ['확률의 곱셈정리', 'P(A∩B) = P(A)·P(B|A)'], ['비복원추출', '꺼낸 것을 다시 넣지 않고 뽑는 방법']],
+    source: 'Ⅱ. 확률 › 조건부확률 › 조건부확률',
+    terms: [['조건부확률 P(B|A)', '사건 A가 일어났을 때 사건 B가 일어날 확률. P(B|A) = P(A∩B)/P(A) (단, P(A)>0)'], ['확률의 곱셈정리', 'P(A∩B) = P(A)P(B|A) (단, P(A)>0)'], ['비복원추출', '꺼낸 것을 다시 넣지 않고 다음 것을 꺼내는 추출']],
     situation: '주머니에 <b>빨간 공 r개와 파란 공 4개</b>가 들어 있습니다. 공을 한 개씩 차례로 꺼내고, 꺼낸 공은 다시 넣지 않습니다. 첫 번째로 빨간 공을 꺼냈다는 것을 알고 있습니다.',
     predict: {
       q: '빨간 공이 3개(r=3)일 때, 첫 번째에 빨간 공이 나온 것을 알고 있다면 두 번째도 빨간 공일 확률은 얼마일까요?',
@@ -1180,8 +1199,8 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
   /* ───────── 10. 독립시행의 확률 ───────── */
   LESSONS.push({
     id: 'indep', unit: UNIT, title: '독립시행의 확률', concept: 'ₙCᵣ pʳ (1−p)ⁿ⁻ʳ',
-    source: '교과서 Ⅱ-4 사건의 독립과 종속 (독립시행의 확률)',
-    terms: [['독립', '한 사건이 일어나도 다른 사건이 일어날 확률이 바뀌지 않는 것'], ['독립시행', '같은 시행을 되풀이할 때 각 시행의 결과가 서로 영향을 주지 않는 시행']],
+    source: 'Ⅱ. 확률 › 조건부확률 › 사건의 독립과 종속 (독립시행의 확률)',
+    terms: [['독립', '두 사건 A, B에서 한 사건이 일어나는 것이 다른 사건이 일어날 확률에 영향을 주지 않을 때. P(B|A) = P(B)'], ['종속', '두 사건 A, B가 서로 독립이 아닐 때'], ['독립시행', '동전이나 주사위를 반복하여 던지는 것처럼, 같은 시행을 반복할 때 각 시행의 결과가 다른 시행의 결과에 영향을 주지 않는 시행']],
     situation: '농구 선수가 자유투를 한 번 던져 성공할 확률이 <b>1/3</b>이라고 합니다(가상의 값). 매번 앞의 결과와 상관없이 던지는 독립시행으로 보고, <b>6번</b> 던집니다.',
     predict: {
       q: '6번 던질 때, 성공 횟수 중 확률이 가장 큰 것은 몇 번일까요?',
@@ -1264,8 +1283,8 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
   }
   LESSONS.push({
     id: 'expect', unit: UNIT, title: '이산확률변수의 기댓값', concept: 'E(X) = x₁p₁ + x₂p₂ + … + xₙpₙ',
-    source: '교과서 Ⅲ-2 이산확률변수의 기댓값과 표준편차',
-    terms: [['확률변수 X', '시행의 결과에 따라 값이 정해지는 변수'], ['이산확률변수', '값을 하나씩 셀 수 있는 확률변수'], ['기댓값(평균) E(X)', '시행을 아주 많이 되풀이할 때 X가 가질 것으로 기대되는 평균값'], ['분산 V(X)', '값이 평균에서 흩어진 정도. V(X)=E(X²)−{E(X)}²']],
+    source: 'Ⅲ. 통계 › 확률분포 › 이산확률변수의 기댓값과 표준편차',
+    terms: [['확률변수 X', '어떤 시행에서 표본공간의 각 원소에 하나의 실수를 대응시키는 것'], ['이산확률변수', '확률변수 X가 가질 수 있는 값이 유한개이거나, 자연수와 같이 셀 수 있을 때'], ['기댓값(평균) E(X)', 'E(X) = x₁p₁ + x₂p₂ + ⋯ + xₙpₙ. 확률변수 X의 평균이라고도 한다'], ['분산 V(X)·표준편차 σ(X)', 'V(X) = E((X−m)²) = E(X²) − {E(X)}², σ(X) = √V(X)']],
     situation: '뽑기 게임에서 점수 X가 <b>1점(확률 1/2), 2점(확률 1/3), a점(확률 1/6)</b>으로 나옵니다(가상의 게임). 게임을 아주 많이 되풀이했을 때 한 번당 평균 점수는 얼마일까요?',
     predict: {
       q: 'a=10일 때 한 번당 평균 점수 E(X)는 얼마일까요?',
@@ -1338,8 +1357,8 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
   /* ───────── 12. 이항분포 ───────── */
   LESSONS.push({
     id: 'bin', unit: UNIT, title: '이항분포', concept: 'X ~ B(n, p)이면 E(X)=np, V(X)=np(1−p)',
-    source: '교과서 Ⅲ-3 이항분포',
-    terms: [['이항분포 B(n, p)', '성공 확률이 p인 독립시행을 n번 할 때 성공 횟수 X의 확률분포'], ['E(X)=np', '평균은 (시행 횟수)×(성공 확률)'], ['V(X)=npq', 'q=1−p']],
+    source: 'Ⅲ. 통계 › 확률분포 › 이항분포',
+    terms: [['이항분포 B(n, p)', '한 번의 시행에서 사건 A가 일어날 확률이 p일 때, n번의 독립시행에서 사건 A가 일어나는 횟수 X의 확률분포. P(X=r) = ₙCᵣ pʳ qⁿ⁻ʳ (q=1−p)'], ['평균 E(X)', 'E(X) = np'], ['분산 V(X)', 'V(X) = npq (단, q=1−p), 표준편차 σ(X) = √(npq)']],
     situation: '갈톤 보드(못 판)에서 구슬이 못에 부딪힐 때마다 <b>오른쪽으로 갈 확률이 p</b>, 왼쪽은 1−p입니다. 못 10단을 지나 오른쪽으로 간 횟수 X(0~10)에 해당하는 칸에 구슬이 모입니다. 즉 X는 이항분포 B(10, p)를 따릅니다.',
     predict: {
       q: '오른쪽으로 갈 확률이 p=0.7일 때, 구슬이 가장 많이 모이는 칸은 어디일까요? (칸 번호는 오른쪽으로 간 횟수 0~10)',
@@ -1444,8 +1463,8 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
   function bandX(m, s) { return [[-9, -3, '#c9cdd4'], [-3, -2, COL.amber], [-2, -1, COL.green], [-1, 1, COL.blue], [1, 2, COL.green], [2, 3, COL.amber], [3, 9, '#c9cdd4']].map(function (b) { return [m + b[0] * s, m + b[1] * s, b[2]]; }); }
   LESSONS.push({
     id: 'norm', unit: UNIT, title: '정규분포', concept: '확률변수 X가 N(m, σ²)을 따를 때 Z = (X−m)/σ는 N(0, 1)을 따른다',
-    source: '교과서 Ⅲ-4 정규분포',
-    terms: [['확률밀도함수', '곡선과 x축 사이의 넓이가 확률이 되는 함수 f(x)'], ['정규분포 N(m, σ²)', '평균 m, 표준편차 σ인 종 모양 분포'], ['표준정규분포 N(0, 1)', '평균 0, 표준편차 1인 정규분포. Z=(X−m)/σ로 바꿔서 확률을 구함']],
+    source: 'Ⅲ. 통계 › 확률분포 › 정규분포',
+    terms: [['연속확률변수', '어떤 범위에 속하는 모든 실수 값을 가지는 확률변수'], ['확률밀도함수', '연속확률변수 X의 확률분포를 나타내는 함수 f(x). P(a≤X≤b)는 y=f(x)의 그래프와 x축 및 두 직선 x=a, x=b로 둘러싸인 부분의 넓이'], ['정규분포 N(m, σ²)', '평균이 m, 표준편차가 σ인 정규분포. 그래프는 직선 x=m에 대하여 대칭인 종 모양'], ['표준정규분포 N(0, 1)', '평균이 0, 표준편차가 1인 정규분포. X가 N(m, σ²)을 따를 때 Z=(X−m)/σ (표준화)는 N(0, 1)을 따른다']],
     situation: '전교생의 수학 점수 X(가상의 자료)가 평균 m=60점, 표준편차 σ점인 정규분포 N(60, σ²)을 따른다고 합시다. 종 모양 곡선과 x축 사이의 <b>넓이가 확률</b>입니다. 슬라이더로 σ를 바꿔 모양을 관찰하세요.',
     predict: {
       q: '표준편차 σ를 5에서 10으로 두 배로 키우면, 곡선과 x축 사이의 전체 넓이는 어떻게 될까요?',
@@ -1533,8 +1552,8 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
   var SIG14 = Math.sqrt(35 / 12);
   LESSONS.push({
     id: 'xbar', unit: UNIT, title: '표본평균의 분포', concept: 'E(X̄)=m, σ(X̄)=σ/√n',
-    source: '교과서 Ⅲ-5 모집단과 표본 (표본평균의 분포)',
-    terms: [['모집단', '조사하려는 전체 대상'], ['표본', '모집단에서 뽑은 일부'], ['표본평균 X̄', '표본의 평균. 표본을 뽑을 때마다 달라지는 확률변수'], ['임의추출', '모집단의 각 대상이 같은 가능성으로 뽑히게 하는 추출']],
+    source: 'Ⅲ. 통계 › 통계적 추정 › 모집단과 표본 (표본평균의 분포)',
+    terms: [['모집단', '통계 조사에서 조사의 대상이 되는 집단 전체'], ['표본', '조사하기 위하여 모집단에서 뽑은 일부분'], ['임의추출', '모집단에 속하는 각 대상이 같은 확률로 추출되도록 하는 방법'], ['표본평균 X̄', '모집단에서 임의추출한 크기가 n인 표본의 평균. 표본에 따라 달라지는 확률변수이며 E(X̄)=m, σ(X̄)=σ/√n']],
     situation: '공정한 주사위를 한 번 던져 나온 눈이 모집단의 값입니다(모평균 m=3.5, 모표준편차 σ=√(35/12)≈1.708). 주사위를 <b>n번 던져 눈의 평균(표본평균 X̄)</b>을 구하는 일을 2000번 되풀이하면, X̄의 값들은 어떤 모양으로 흩어질까요?',
     predict: {
       q: '던지는 횟수(표본의 크기)를 n=1에서 n=25로 늘리면, 표본평균 X̄의 값들이 흩어진 정도(표준편차)는 어떻게 될까요?',
@@ -1608,8 +1627,8 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
   function z15(seed) { var R = MX.rng(seed * 53 + 11), a = []; for (var i = 0; i < 100; i++) a.push(MX.normal(R)); return a; }
   LESSONS.push({
     id: 'ci', unit: UNIT, title: '모평균의 추정과 신뢰구간', concept: '신뢰도 95%: x̄ − 1.96·σ/√n ≤ m ≤ x̄ + 1.96·σ/√n',
-    source: '교과서 Ⅲ-6 모평균의 추정',
-    terms: [['모평균 m', '모집단의 평균. 보통 알 수 없어서 추정한다'], ['추정', '표본으로 모집단의 값을 어림잡는 일'], ['신뢰구간', '모평균을 포함할 것으로 기대하는 구간'], ['신뢰도 95%', '표본을 여러 번 뽑아 구간을 만들면 그중 약 95%가 모평균을 포함한다는 뜻']],
+    source: 'Ⅲ. 통계 › 통계적 추정 › 모평균의 추정',
+    terms: [['모평균 m', '모집단의 평균. 보통 알 수 없어서 표본을 이용하여 추정한다'], ['추정', '표본에서 얻은 정보를 이용하여 모평균과 같은 모집단의 특성을 추측하는 것'], ['신뢰구간', '모평균 m에 대한 신뢰도 95%의 신뢰구간: x̄ − 1.96·σ/√n ≤ m ≤ x̄ + 1.96·σ/√n'], ['신뢰도 95%', '크기가 n인 표본을 여러 번 임의추출하여 신뢰구간을 만들면, 그중 약 95%가 모평균 m을 포함한다는 뜻']],
     situation: '모표준편차가 σ=10인 정규분포 모집단에서 크기 n의 표본을 뽑아 표본평균 x̄를 구하고, 모평균 m의 신뢰도 95% 신뢰구간 <b>x̄ ± 1.96·σ/√n</b>을 만듭니다. 이 일을 100번 되풀이한 결과가 3D에 줄지어 있습니다. (실제 모평균은 50이지만, 연구자는 모른다고 가정합니다.)',
     predict: {
       q: '표본의 크기를 n=25에서 n=100으로 4배로 늘리면, 신뢰도 95% 신뢰구간의 길이는 어떻게 될까요?',
@@ -1703,7 +1722,7 @@ var TEACH = {
   comb: {
     ask: ['사과·사과·배와 배·사과·사과가 같은 방법인 이유는?', '칸막이(|) 2개는 무엇을 나누는 역할을 하나요?'],
     simplify: '각 과일이 충분히 많다고 가정했습니다. 3D는 가능한 담는 방법을 하나씩 순환하며, 공과 칸막이를 놓는 방법은 ₙHᵣ=ₙ₊ᵣ₋₁Cᵣ과 같은 값을 줍니다.',
-    misc: '중복순열 3ʳ과 혼동합니다. 중복을 허용해도 ₙCᵣ을 그대로 씁니다.',
+    misc: '중복순열 3ʳ과 혼동합니다. 중복을 허락해도 ₙCᵣ을 그대로 씁니다.',
     verify: 'r=1~6에서 (사과, 배, 귤) 개수의 조합을 직접 세어 표시값과 일치했습니다. x+y+z+w=3의 음이 아닌 정수 해는 20개임을 모두 세어 확인했습니다.',
     data: '교과서 내용: 중복조합의 수 ₙHᵣ=ₙ₊ᵣ₋₁Cᵣ. 가상의 상황: 과일 가게.'
   },
@@ -1785,6 +1804,41 @@ var TEACH = {
     data: '교과서 내용: 신뢰도 95%의 1.96, 신뢰도 99%의 2.58을 쓴 신뢰구간. σ=10, 모평균 50, 표본 100개는 가상의 설정(난수)입니다.'
   }
 };
+
+/* keys.js — 레슨별 "핵심 식"
+   f  : n, r 같은 미지수로 쓴 일반식 (교과서 기호)
+   ex : 지금 슬라이더 값을 대입한 예시 (책장·패널에서 파란색으로 표시)
+   첨자는 유니코드 아래·위 첨자 글자로 적고, 화면에서는 작게 내려·올려 그림 */
+var KEYS = (function () {
+  var SUB = '₀₁₂₃₄₅₆₇₈₉', SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+  var sub = function (n) { return String(n).split('').map(function (d) { return SUB[+d]; }).join(''); };
+  var sup = function (n) { return String(n).split('').map(function (d) { return SUP[+d]; }).join(''); };
+  var nCr = MX.nCr, fact = MX.fact;
+  var val = function (d, v, env, k) { return String(d.calc(v, env)[k][1]); };
+  var num = function (s) { var m = String(s).match(/-?\d+(\.\d+)?/); return m ? m[0] : s; };
+  return {
+    circ: { f: '원순열의 수 = n!/n = (n−1)!', ex: function (d, n) { return '(' + n + '−1)! = ' + (n - 1) + '! = ' + fact(n - 1); } },
+    rep: { f: 'ₙΠᵣ = nʳ', ex: function (d, r) { return '₃Π' + sub(r) + ' = 3' + sup(r) + ' = ' + Math.pow(3, r); } },
+    dup: { f: 'n!/(p!q!⋯r!)  (p+q+⋯+r = n)', ex: function (d, k) { return '5!/' + k + '! = ' + fact(5) / fact(k); } },
+    comb: { f: 'ₙHᵣ = ₙ₊ᵣ₋₁Cᵣ', ex: function (d, r) { return '₃H' + sub(r) + ' = ' + sub(r + 2) + 'C' + sub(r) + ' = ' + nCr(r + 2, r); } },
+    binom: { f: 'ₙC₀ + ₙC₁ + ⋯ + ₙCₙ = 2ⁿ', ex: function (d, n) { return sub(n) + 'C₀ + ' + sub(n) + 'C₁ + ⋯ + ' + sub(n) + 'C' + sub(n) + ' = ' + Math.pow(2, n) + ' = 2' + sup(n); } },
+    stat: { f: '상대도수 rₙ/n → 통계적 확률 (n이 충분히 클 때)', ex: function (d, v, env) { return num(val(d, v, env, 1)) + '/' + num(val(d, v, env, 0)) + ' = ' + val(d, v, env, 2); } },
+    add: { f: 'P(A∪B) = P(A) + P(B) − P(A∩B)', ex: function (d, v) { return '60/100 + 50/100 − ' + v + '/100 = ' + (110 - v) + '/100'; } },
+    comp: { f: 'P(A) = 1 − P(Aᶜ)', ex: function (d, v, env) { return '1 − ' + val(d, v, env, 1) + ' = ' + val(d, v, env, 2); } },
+    cond: { f: 'P(B|A) = P(A∩B)/P(A)', ex: function (d, v, env) { return '(' + val(d, v, env, 2) + ') ÷ (' + val(d, v, env, 1) + ') = ' + val(d, v, env, 3); } },
+    indep: { f: 'P(X=r) = ₙCᵣ pʳ qⁿ⁻ʳ  (q = 1−p)', ex: function (d, r, env) { return '₆C' + sub(r) + '(1/3)' + sup(r) + '(2/3)' + sup(6 - r) + ' = ' + val(d, r, env, 2).replace(/ ≈.*/, ''); } },
+    expect: { f: 'E(X) = x₁p₁ + x₂p₂ + ⋯ + xₙpₙ', ex: function (d, a, env) { return '1×½ + 2×⅓ + ' + a + '×⅙ = ' + val(d, a, env, 0); } },
+    bin: { f: 'E(X) = np,  V(X) = npq', ex: function (d, v, env) {
+      var m = val(d, v, env, 0).match(/B\((\d+), ([\d.]+)\)/); if (!m) return val(d, v, env, 1);
+      var n = +m[1], p = +m[2], q = Math.round((1 - p) * 100) / 100;
+      return 'E(X) = ' + n + '×' + p + ' = ' + MX.fx(n * p, 2) + ',  V(X) = ' + n + '×' + p + '×' + q + ' = ' + MX.fx(n * p * q, 2);
+    } },
+    norm: { f: 'Z = (X − m)/σ', ex: function (d, s) { return 'Z = (70 − 60)/' + s + ' = ' + MX.fx(10 / s, 2); } },
+    xbar: { f: 'E(X̄) = m,  σ(X̄) = σ/√n', ex: function (d, n, env) { return 'σ(X̄) = 1.708/√' + n + ' = ' + val(d, n, env, 2); } },
+    ci: { f: 'x̄ − 1.96·σ/√n ≤ m ≤ x̄ + 1.96·σ/√n', ex: function (d, n, env) { return '구간의 길이 2×1.96×10/√' + n + ' = ' + val(d, n, env, 1); } }
+  };
+})();
+if (typeof module !== 'undefined') module.exports = { KEYS: KEYS };
 
 /* ink.js — 잉크 펜화 느낌의 3D 재질과 레슨용 3D 도우미
    · 채도가 낮은 색 → 흰 종이에 펜으로 그린 모형(어두운 쪽은 빗금)
@@ -1958,7 +2012,11 @@ var PAGES = (function () {
     g.addColorStop(0, 'rgba(90,70,40,0.22)'); g.addColorStop(1, 'rgba(90,70,40,0)'); c.fillStyle = g; c.fillRect(0, 0, PW, PH);
   }
 
-  /* ── 글자 배치 (굵게 <b> 지원, 한글은 글자 단위 줄바꿈) ── */
+  /* ── 글자 배치 (굵게 <b> 지원, 한글은 글자 단위 줄바꿈) ──
+     6차: ₙ ᵣ ₊ ² ⁿ 같은 아래·위 첨자 유니코드는 글꼴마다 모양·크기가 달라 수식이 깨져 보였음
+          → 보통 글자로 바꾼 뒤 작게(0.66배) 내려(아래 첨자)·올려(위 첨자) 직접 그림 */
+  var SUBC = '₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₐₑₒₓₕₖₗₘₙₚₛₜᵢⱼᵣᵤᵥ', SUBN = '0123456789+−=()aeoxhklmnpstijruv';
+  var SUPC = '⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿⁱʳᶜˣᵏᵃᵇ', SUPN = '0123456789+−=()nircxkab';
   function decode(s) { return s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"'); }
   function chars(html) {
     var out = [], b = false;
@@ -1966,56 +2024,83 @@ var PAGES = (function () {
       if (/^<b>$/i.test(p) || /^<strong>$/i.test(p)) b = true;
       else if (/^<\/b>$/i.test(p) || /^<\/strong>$/i.test(p)) b = false;
       else if (/^</.test(p)) { /* 다른 태그는 버림 */ }
-      else decode(p).split('').forEach(function (ch) { out.push({ ch: ch, b: b }); });
+      else decode(p).split('').forEach(function (ch) {
+        var i = SUBC.indexOf(ch), j = SUPC.indexOf(ch);
+        if (i >= 0) out.push({ ch: SUBN[i], b: b, s: 1 }); else if (j >= 0) out.push({ ch: SUPN[j], b: b, s: 2 }); else out.push({ ch: ch, b: b, s: 0 });
+      });
     });
     return out;
   }
-  function plain(html) { return chars(html).map(function (x) { return x.ch; }).join(''); }
+  function plain(html) { return String(html).replace(/<[^>]+>/g, ''); }
+  /* HTML 화면용: 첨자 유니코드를 <sub>·<sup> 로 바꿔 글꼴에 상관없이 고르게 보이게 */
+  var reSub = new RegExp('[' + SUBC + ']+', 'g'), reSup = new RegExp('[' + SUPC + ']+', 'g');
+  function mh(s) {
+    var map = function (str, from, to) { return str.split('').map(function (ch) { return to[from.indexOf(ch)]; }).join(''); };
+    return String(s).replace(reSub, function (m) { return '<sub>' + map(m, SUBC, SUBN) + '</sub>'; }).replace(reSup, function (m) { return '<sup>' + map(m, SUPC, SUPN) + '</sup>'; });
+  }
   /* 쪽 전체 글자 배율: 내용이 넘치면 쪽을 다시 그리며 조금씩 줄임 */
   var K = 1, trunc = [];
   function fz(n) { return Math.round(n * K); }
+  var SS = 0.66;                                   /* 첨자 크기 비율 */
+  /* 글자 하나 그리기·재기 도우미 (첨자 포함) */
+  function fonts(size, o) {
+    var font = o.font || SERIF, w = o.weight || 400, ss = Math.max(8, Math.round(size * SS));
+    return { size: size, n: w + ' ' + size + 'px ' + font, b: '700 ' + size + 'px ' + font, sn: w + ' ' + ss + 'px ' + font, sb: '700 ' + ss + 'px ' + font };
+  }
+  function fontOf(F, q, bold) { var bb = q.b || bold; return q.s ? (bb ? F.sb : F.sn) : (bb ? F.b : F.n); }
+  function drawRun(c, ln, x, y, F, bold, cw) {
+    var xx = x;
+    ln.forEach(function (q) {
+      c.font = fontOf(F, q, bold);
+      c.fillText(q.ch, xx, y + (q.s === 1 ? F.size * 0.24 : q.s === 2 ? -F.size * 0.36 : 0));
+      xx += cw(q);
+    });
+    return xx - x;
+  }
   /* o: {size, min(줄 수가 넘치면 이 크기까지 줄임), font, color, lh, bold, weight, max(최대 줄 수), tag} → 마지막 y 반환
      3차: 말줄임(…)은 글자를 최소 크기까지 줄여도 안 들어갈 때만 쓰고, 그 경우 trunc 에 기록 */
   function layout(c, cs, w, size, o) {
-    var font = o.font || SERIF, fN = (o.weight || 400) + ' ' + size + 'px ' + font, fB = '700 ' + size + 'px ' + font, wcache = {};
-    function cw(ch, b) { var k = (b ? 'b' : 'n') + ch; if (wcache[k] === undefined) { c.font = b || o.bold ? fB : fN; wcache[k] = c.measureText(ch).width; } return wcache[k]; }
+    var F = fonts(size, o), wcache = {};
+    function cw(q) { var k = (q.b ? 'b' : 'n') + q.s + q.ch; if (wcache[k] === undefined) { c.font = fontOf(F, q, o.bold); wcache[k] = c.measureText(q.ch).width; } return wcache[k]; }
     var lines = [], line = [], width = 0, lastSpace = -1;
     cs.forEach(function (x) {
       if (x.ch === '\n') { lines.push(line); line = []; width = 0; lastSpace = -1; return; }
-      var ww = cw(x.ch, x.b);
+      var ww = cw(x);
       if (width + ww > w && line.length) {
         if (lastSpace > 0 && lastSpace > line.length - 14) { var rest = line.slice(lastSpace + 1); lines.push(line.slice(0, lastSpace)); line = rest; }
         else { lines.push(line); line = []; }
-        width = line.reduce(function (s, q) { return s + cw(q.ch, q.b); }, 0); lastSpace = -1;
+        width = line.reduce(function (s, q) { return s + cw(q); }, 0); lastSpace = -1;
         if (x.ch === ' ' && !line.length) return;
       }
       if (x.ch === ' ') lastSpace = line.length;
       line.push(x); width += ww;
     });
     if (line.length) lines.push(line);
-    return { lines: lines, cw: cw, fN: fN, fB: fB };
+    return { lines: lines, cw: cw, F: F };
   }
   function para(c, html, x, y, w, o) {
     o = o || {}; var base = fz(o.size || 26), min = Math.min(base, fz(o.min || o.size || 26)), size = base, cs = chars(html), L;
     for (; ; size--) { L = layout(c, cs, w, size, o); if (!o.max || L.lines.length <= o.max || size <= min) break; }
-    var lines = L.lines, cw = L.cw, lh = Math.round((o.lh ? fz(o.lh) : base * 1.55) * size / base);
+    var lines = L.lines, cw = L.cw, lh = Math.round((o.lh ? fz(o.lh) : base * 1.55) * size / base), ell = { ch: '…', b: false, s: 0 };
     if (o.max && lines.length > o.max) {
       trunc.push((o.tag || '글') + ': ' + plain(html).slice(0, 40));
-      lines = lines.slice(0, o.max); var l = lines[o.max - 1]; while (l.length && l.reduce(function (s, q) { return s + cw(q.ch, q.b); }, 0) > w - cw('…')) l.pop(); l.push({ ch: '…', b: false });
+      lines = lines.slice(0, o.max); var l = lines[o.max - 1]; while (l.length && l.reduce(function (s, q) { return s + cw(q); }, 0) > w - cw(ell)) l.pop(); l.push(ell);
     }
     c.fillStyle = o.color || INKC; c.textBaseline = 'alphabetic'; c.textAlign = 'left';
-    lines.forEach(function (ln, k) {
-      var xx = x, yy = y + k * lh + size;
-      ln.forEach(function (q) { c.font = q.b || o.bold ? L.fB : L.fN; c.fillText(q.ch, xx, yy); xx += cw(q.ch, q.b); });
-    });
+    lines.forEach(function (ln, k) { drawRun(c, ln, x, y + k * lh + size, L.F, o.bold, cw); });
     return y + lines.length * lh;
   }
   function text(c, s, x, y, font, color, align) { c.font = font; c.fillStyle = color || INKC; c.textAlign = align || 'left'; c.textBaseline = 'alphabetic'; c.fillText(s, x, y); }
-  /* 한 줄 글: maxW 를 넘으면 글자 크기를 줄여서 맞춤 */
+  /* 한 줄 글(첨자 포함): maxW 를 넘으면 글자 크기를 줄여서 맞춤. align: left | right | center */
   function fitText(c, s, x, y, maxW, size, pre, font, color, align) {
-    size = fz(size); c.font = pre + ' ' + size + 'px ' + font;
-    var tw = c.measureText(s).width; if (tw > maxW) { size = Math.max(10, Math.floor(size * maxW / tw)); }
-    text(c, s, x, y, pre + ' ' + size + 'px ' + font, color, align); return size;
+    var o = { font: font, weight: pre && /\d/.test(pre) ? pre : 400 }, cs = chars(s).filter(function (q) { return q.ch !== '\n'; });
+    size = fz(size);
+    var L = layout(c, cs, 1e9, size, o), tw = cs.reduce(function (t, q) { return t + L.cw(q); }, 0);
+    if (tw > maxW) { size = Math.max(10, Math.floor(size * maxW / tw)); L = layout(c, cs, 1e9, size, o); tw = cs.reduce(function (t, q) { return t + L.cw(q); }, 0); }
+    var x0 = align === 'right' ? x - tw : align === 'center' ? x - tw / 2 : x;
+    c.fillStyle = color || INKC; c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+    drawRun(c, cs, x0, y, L.F, false, L.cw);
+    return size;
   }
   function rrect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
   /* 손으로 그린 듯 흔들리는 선 */
@@ -2055,18 +2140,21 @@ var PAGES = (function () {
     fitText(c, d.title, L, 96 + fz(78), w, 64, '900', SERIF, INKC);
     y = para(c, d.concept, L, 96 + fz(94), w, { size: 25, min: 19, color: GRAY, max: 2, tag: '개념' });
 
-    /* 핵심 식 상자 (슬라이더와 함께 바뀜): 왼쪽 식, 오른쪽 값 — 서로 겹치지 않게 폭을 나눔 */
-    var rows = d.calc(st.v, st.env), em = rows.filter(function (r) { return r[2]; })[0] || rows[rows.length - 1];
-    y += fz(16); var bh = fz(116), valW = w * 0.34, labW = w - valW - 50;
+    /* 핵심 식 상자 — 6차: 위는 n, r 같은 미지수로 쓴 일반식(검정), 아래는 지금 값을 대입한 예시(파랑) */
+    var key = (typeof KEYS !== 'undefined' && KEYS[d.id]) || null, rows = d.calc(st.v, st.env), em = rows.filter(function (r) { return r[2]; })[0] || rows[rows.length - 1];
+    var gen = key ? key.f : em[0], ex = key ? key.ex(d, st.v, st.env) : String(em[1]);
+    y += fz(16); var bh = fz(132);
     c.fillStyle = 'rgba(242,234,214,0.75)'; rrect(c, L, y, w, bh, 12); c.fill(); c.strokeStyle = 'rgba(42,40,51,0.5)'; c.lineWidth = 2; c.stroke();
-    text(c, '핵심 식', L + 22, y + fz(34), '700 ' + fz(20) + 'px ' + SANS, RED);
-    para(c, em[0], L + 22, y + fz(40), labW, { size: 26, min: 17, weight: 700, max: 2, lh: 32, tag: '핵심 식' });
-    fitText(c, String(em[1]), R - 22, y + bh * 0.66, valW, 34, '700', SERIF, BLUE, 'right');
+    text(c, '핵심 식', L + 22, y + fz(32), '700 ' + fz(20) + 'px ' + SANS, RED);
+    fitText(c, gen, L + 22, y + fz(72), w - 44, 32, '700', SERIF, INKC, 'left');
+    text(c, '예', L + 22, y + fz(114), '700 ' + fz(19) + 'px ' + SANS, BLUE);
+    fitText(c, ex, L + 52, y + fz(114), w - 74, 28, '700', SERIF, BLUE, 'left');
     y += bh;
-    /* 여백의 손글씨 메모: 쪽 안쪽에 오른쪽 맞춤 */
-    var memo = d.slider.label.split(' ').pop() + ' = ' + d.slider.fmt(st.v) + '  →  ' + em[1];
-    c.save(); c.translate(R - 8, y + fz(40)); c.rotate(-0.035); fitText(c, memo, 0, 0, w * 0.75, 36, '', HAND, BLUE, 'right'); c.restore();
-    y += fz(56);
+    /* 여백의 손글씨 메모: 지금 슬라이더 값 (쪽 안쪽에 오른쪽 맞춤) */
+    var fv = d.slider.fmt(st.v), vm = d.slider.label.match(/(n\(A∩B\)|[a-zσ])(?![a-z가-힣])/gi), vn = vm ? vm[vm.length - 1] : '';
+    var memo = (/=/.test(fv) || !vn ? fv : vn + ' = ' + fv) + '일 때 ↑';
+    c.save(); c.translate(R - 8, y + fz(38)); c.rotate(-0.035); fitText(c, memo, 0, 0, w * 0.6, 34, '', HAND, BLUE, 'right'); c.restore();
+    y += fz(52);
 
     /* 상황 */
     y = para(c, d.situation, L, y, w, { size: 26, min: 19, max: 6, lh: 40, tag: '상황' }) + fz(12);
@@ -2197,7 +2285,7 @@ var PAGES = (function () {
   }
 
   /* 쪽 캔버스 좌표 → 책장 위치(0~1) */
-  return { PW: PW, PH: PH, FLAP: FLAP, STAMP: STAMP, make: make, copy: copy, drawLeft: drawLeft, drawRight: drawRight, fitSvg: fitSvg, drawCover: drawCover, plain: plain, MARK: MARK, HAND: HAND, SERIF: SERIF, SANS: SANS };
+  return { PW: PW, PH: PH, FLAP: FLAP, STAMP: STAMP, make: make, copy: copy, drawLeft: drawLeft, drawRight: drawRight, fitSvg: fitSvg, mh: mh, drawCover: drawCover, plain: plain, MARK: MARK, HAND: HAND, SERIF: SERIF, SANS: SANS };
 })();
 
 /* book.js — 책상 위의 3D 책: 표지 열기, 책장 넘기기, 덮개, 도장, 모형 세우기, 카메라 */
@@ -2443,7 +2531,8 @@ function BookWorld(T, canvas) {
   this.redrawTags = function () { if (H) H.redrawTags(); };
 
   /* ── 카메라 ── */
-  var cur = { t: new T.Vector3(0, 0.6, 0.6), theta: 0, phi: 0.75, r: 22 }, goal = { t: new T.Vector3(0, 0.6, 0.6), theta: 0, phi: 0.75, R: 8 }, user = { dt: 0, dp: 0, z: 1 };
+  var cur = { t: new T.Vector3(0, 0.6, 0.6), theta: 0, phi: 0.75, r: 22 }, goal = { t: new T.Vector3(0, 0.6, 0.6), theta: 0, phi: 0.75, R: 8 }, user = { dt: 0, dp: 0, z: 1, px: 0, pz: 0 };   /* px·pz: 두 손가락으로 옮긴 만큼(책상 위 좌표) */
+  var gT = new T.Vector3();
   var ins = { l: 0, r: 0, b: 70, t: 0 }, vo = { x: 0, y: 0 }, snap = true;
   this.setInsets = function (o) { ins = o; };
   function fitR(R) {
@@ -2490,11 +2579,21 @@ function BookWorld(T, canvas) {
   /* p: {t:[x,y,z] 또는 Vector3, theta, phi, R(대략 크기), pts('spread'|'cover'|'flap'|'model': 이 범위가 다 보이게)} */
   this.poseTo = function (p, keepUser) {
     goal.t.copy(p.t.isVector3 ? p.t : new T.Vector3(p.t[0], p.t[1], p.t[2])); goal.theta = p.theta; goal.phi = p.phi; goal.R = p.R; goal.pts = p.pts || null; goal.min = p.min || 0;
-    if (!keepUser) { user.dt = 0; user.dp = 0; user.z = 1; }
+    if (!keepUser) { user.dt = 0; user.dp = 0; user.z = 1; user.px = 0; user.pz = 0; }
     if (self.still) snap = true;
   };
-  this.orbit = function (dt, dp, dz) { user.dt += dt; user.dp = MX.clamp(user.dp + dp, -0.6, 0.5); if (dz) user.z = MX.clamp(user.z * dz, 0.35, 2.2); if (self.still) snap = true; };
-  this.resetUser = function () { user.dt = 0; user.dp = 0; user.z = 1; if (self.still) snap = true; };
+  /* 6차: 휴대폰에서 글자를 읽을 만큼 가까이 갈 수 있게 최소 배율을 0.35 → 0.15 */
+  this.orbit = function (dt, dp, dz) { user.dt += dt; user.dp = MX.clamp(user.dp + dp, -0.6, 0.5); if (dz) user.z = MX.clamp(user.z * dz, 0.15, 2.2); if (self.still) snap = true; };
+  this.resetUser = function () { user.dt = 0; user.dp = 0; user.z = 1; user.px = 0; user.pz = 0; if (self.still) snap = true; };
+  /* 화면에서 손가락이 움직인 픽셀만큼 보는 곳을 책상 위에서 옮김 (내용이 손가락을 따라오게) */
+  this.pan = function (dxPx, dyPx) {
+    var h = canvas.clientHeight || 1, k = cur.r * 2 * Math.tan(cam.fov * Math.PI / 360) / h, th = cur.theta, sy = 1 / Math.max(0.35, Math.cos(cur.phi));
+    var rx = Math.cos(th), rz = -Math.sin(th), fx = -Math.sin(th), fz = -Math.cos(th);   /* 오른쪽, 앞(멀어지는 쪽) */
+    user.px = MX.clamp(user.px + (-dxPx * rx + dyPx * sy * fx) * k, -9, 9);
+    user.pz = MX.clamp(user.pz + (-dxPx * rz + dyPx * sy * fz) * k, -7, 7);
+    if (self.still) snap = true;
+  };
+  this.zoomLevel = function () { return user.z; };
   this.snapCam = function () { snap = true; };
 
   /* ── 고르기(클릭) ── */
@@ -2544,7 +2643,7 @@ function BookWorld(T, canvas) {
     var gth = goal.theta + user.dt, gph = MX.clamp(goal.phi + user.dp, 0.18, 1.45), pts = goal.pts ? ptsFor(goal.pts) : null;
     var gr = (pts ? Math.max(goal.min, fitPts(pts, goal.t, gth, gph)) : fitR(goal.R)) * user.z;
     var a = snap ? 1 : 1 - Math.exp(-dt * 3.2); snap = false;
-    cur.t.lerp(goal.t, a); cur.theta += (gth - cur.theta) * a; cur.phi += (gph - cur.phi) * a; cur.r += (gr - cur.r) * a;
+    gT.set(goal.t.x + user.px, goal.t.y, goal.t.z + user.pz); cur.t.lerp(gT, a); cur.theta += (gth - cur.theta) * a; cur.phi += (gph - cur.phi) * a; cur.r += (gr - cur.r) * a;
     var sp = Math.sin(cur.phi);
     cam.position.set(cur.t.x + cur.r * sp * Math.sin(cur.theta), cur.t.y + cur.r * Math.cos(cur.phi), cur.t.z + cur.r * sp * Math.cos(cur.theta));
     cam.lookAt(cur.t);
@@ -2564,7 +2663,7 @@ function BookWorld(T, canvas) {
   'use strict';
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
-  var L = LESSONS, MARK = PAGES.MARK;
+  var L = LESSONS, MARK = PAGES.MARK, mh = PAGES.mh;      /* mh: 첨자 유니코드 → <sub>/<sup> */
   var T = null, world = null;
 
   /* ───────── 저장소 (막혀 있어도 동작) ───────── */
@@ -2648,11 +2747,15 @@ function BookWorld(T, canvas) {
   }
 
   /* ───────── 카메라 자세 ───────── */
+  function portraitPhone() { return window.innerWidth <= 760 && window.innerHeight > window.innerWidth; }
   function pose(name, keep) {
     if (!world) return;
+    S.pose = name;                        /* 화면 방향이 바뀌면 같은 자세로 다시 맞추려고 기억 */
     var W = world.W, mi = world.modelInfo;
     /* pts: 이 범위(책 전체·모형 등)가 패널을 뺀 빈 화면 안에 다 들어오도록 거리를 맞춤 */
     if (name === 'cover') world.poseTo({ t: [W / 2 - 0.3, 0.5, 0.35], theta: -0.45, phi: 0.95, R: 6.3, pts: 'cover' }, keep);
+    /* 6차: 세로 휴대폰은 펼친 두 쪽을 다 넣으면 너무 작아져서 글이 있는 왼쪽 쪽 하나를 크게 보여 줌 */
+    else if (name === 'spread' && portraitPhone()) world.poseTo({ t: [-W / 2, 0.3, 0.6], theta: 0.04, phi: 0.6, R: 4.6, pts: 'flap', min: 4 }, keep);
     else if (name === 'spread') world.poseTo({ t: [0, 0.3, 0.35], theta: 0, phi: 0.74, R: 7.6, pts: 'spread' }, keep);
     else if (name === 'model') world.poseTo({ t: [(mi.center.x + W / 2) / 2, (mi.center.y + world.TOP) / 2, mi.center.z / 2], theta: 0.3, phi: (mi.cam && mi.cam.bookPhi) || 0.98, R: Math.max(4, mi.radius * 1.25), pts: 'modelPage', min: 7 }, keep);   /* bookPhi: 레슨이 원하는 내려다보는 각도 */
     else if (name === 'low') world.poseTo({ t: mi.center, theta: 0.95, phi: 1.3, R: Math.max(3, mi.radius * 0.9), pts: 'model', min: 5 }, keep);
@@ -2700,6 +2803,8 @@ function BookWorld(T, canvas) {
       else if (vis(tr)) t = tr.getBoundingClientRect().bottom + 8;   /* 접힌 실험 버튼 아래부터 */
     }
     world.setInsets({ l: l, r: r, b: b, t: t });
+    /* 확대·축소 버튼은 패널에 가리지 않게 빈 화면의 오른쪽 아래(좁은 화면은 오른쪽 위)에 */
+    var zc = $('#zoomCtl'); if (zc) { if (narrow) { zc.style.right = ''; zc.style.bottom = ''; } else { zc.style.right = (r ? r : 12) + 'px'; zc.style.bottom = (b + 10) + 'px'; } }
   }
 
   /* ───────── 조작 바 ───────── */
@@ -2744,18 +2849,18 @@ function BookWorld(T, canvas) {
 
   /* ───────── 레슨 그리기 ───────── */
   function optHtml(name, opts, order) {
-    return order.map(function (oi, k) { return '<label class="opt"><input type="radio" name="' + name + '" value="' + oi + '"><span class="mark">' + MARK[k] + '</span><span>' + opts[oi].t + '</span></label>'; }).join('');
+    return order.map(function (oi, k) { return '<label class="opt"><input type="radio" name="' + name + '" value="' + oi + '"><span class="mark">' + MARK[k] + '</span><span>' + mh(opts[oi].t) + '</span></label>'; }).join('');
   }
   function resetLesson(i) {
     var d = L[i]; stopDemo(true);
     S.idx = i; S.seed = 1; S.pick = null; S.started = false; S.revealed = false; S.aPick = null; S.aChecked = false; S.aOk = false; S.tryMin = false; S.panel = null;
     S.order = shuffled(d.predict.options.length, d.id + 'p'); S.aOrder = shuffled(d.apply.options.length, d.id + 'a');
-    $('#unitTag').textContent = d.unit + ' · ' + (i + 1) + '/' + L.length; $('#lTitle').textContent = d.title; $('#lConcept').textContent = d.concept;
-    $('#terms').innerHTML = d.terms.map(function (t) { return '<dt>' + t[0] + '</dt><dd>' + t[1] + '</dd>'; }).join('');
-    $('#situation').innerHTML = d.situation; $('#predQ').textContent = d.predict.q;
+    $('#unitTag').textContent = d.unit + ' · ' + (i + 1) + '/' + L.length; $('#lTitle').textContent = d.title; $('#lConcept').innerHTML = mh(d.concept);
+    $('#terms').innerHTML = d.terms.map(function (t) { return '<dt>' + mh(t[0]) + '</dt><dd>' + mh(t[1]) + '</dd>'; }).join('');
+    $('#situation').innerHTML = mh(d.situation); $('#predQ').innerHTML = mh(d.predict.q);
     $('#predOpts').innerHTML = optHtml('pred', d.predict.options, S.order);
     $('#btnStart').disabled = true; $('#startHint').textContent = '답을 하나 고르면 실험을 시작할 수 있어요.';
-    $('#answerBox').innerHTML = ''; $('#aQ').textContent = d.apply.q; $('#aOpts').innerHTML = optHtml('app', d.apply.options, S.aOrder); $('#aResult').hidden = true; $('#aResult').innerHTML = ''; $('#btnCheck').disabled = true;
+    $('#answerBox').innerHTML = ''; $('#aQ').innerHTML = mh(d.apply.q); $('#aOpts').innerHTML = optHtml('app', d.apply.options, S.aOrder); $('#aResult').hidden = true; $('#aResult').innerHTML = ''; $('#btnCheck').disabled = true;
     $('#teacherBox').innerHTML = ''; $('#sourceBox').innerHTML = '';
     var sl = $('#slider'); sl.min = d.slider.min; sl.max = d.slider.max; sl.step = d.slider.step; sl.value = d.slider.value;
     document.title = d.title + ' · 확률과 통계 3D 교과서'; markToc();
@@ -2787,6 +2892,8 @@ function BookWorld(T, canvas) {
   function arrive() {
     if (S.idx < 0) return;
     setPanel('predict'); layout();
+    var touch = false; try { touch = matchMedia('(pointer: coarse)').matches; } catch (e) { /* 무시 */ }
+    if (isBook() && (touch || window.innerWidth <= 760) && !prefs.pinchHint) { prefs.pinchHint = true; save(); toast('두 손가락으로 벌리면 확대, 함께 끌면 이동해요. 오른쪽 + − 버튼도 있어요.'); }
     if (!isBook()) window.scrollTo(0, 0);
     $('#lTitle').focus({ preventScroll: true });
   }
@@ -2803,7 +2910,7 @@ function BookWorld(T, canvas) {
     $$('input[name=pred]').forEach(function (x) { x.disabled = true; });
     $('#btnStart').disabled = true; $('#startHint').textContent = '실험이 열렸어요. 모형이 책장 위로 일어서요!';
     $('#sliderLabel').textContent = d.slider.label;
-    $('#legend').innerHTML = (d.legend || []).map(function (q) { return '<span><i style="background:' + q[0] + '"></i>' + q[1] + '</span>'; }).join('');
+    $('#legend').innerHTML = (d.legend || []).map(function (q) { return '<span><i style="background:' + q[0] + '"></i>' + mh(q[1]) + '</span>'; }).join('');
     $('#omitted').textContent = '생략한 조건: ' + d.omitted; $('#svgFig').setAttribute('aria-label', d.svgAlt);
     var ab = $('#actions'); ab.innerHTML = '';
     (d.actions || []).forEach(function (a) { var b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost sm'; b.textContent = a.label; b.addEventListener('click', function () { S.seed++; refresh(); }); ab.appendChild(b); });
@@ -2815,7 +2922,10 @@ function BookWorld(T, canvas) {
   function refresh(skip3d) {
     var d = cur(), v = val(), e = env();
     $('#sliderOut').textContent = d.slider.fmt(v); $('#slider').setAttribute('aria-valuetext', d.slider.fmt(v));
-    $('#readout').innerHTML = d.calc(v, e).map(function (r) { return '<tr' + (r[2] ? ' class="em"' : '') + '><th scope="row">' + r[0] + '</th><td>' + r[1] + '</td></tr>'; }).join('');
+    $('#readout').innerHTML = d.calc(v, e).map(function (r) { return '<tr' + (r[2] ? ' class="em"' : '') + '><th scope="row">' + mh(r[0]) + '</th><td>' + mh(r[1]) + '</td></tr>'; }).join('');
+    /* 핵심 식: 일반식(검정) + 지금 값 대입 예시(파랑) — 책장의 상자와 같은 내용 */
+    var key = typeof KEYS !== 'undefined' && KEYS[d.id];
+    $('#keyBox').innerHTML = key ? '<div class="kl">핵심 식</div><div class="kf">' + mh(key.f) + '</div><div class="kx"><b>예</b>' + mh(key.ex(d, v, e)) + '</div>' : '';
     var inner = d.svg(v, e); $('#svgFig').innerHTML = inner; $('#svgFig').setAttribute('viewBox', PAGES.fitSvg(inner).vb);
     if (!skip3d && world) world.updateModel(v, e);
     redrawPages();
@@ -2838,7 +2948,7 @@ function BookWorld(T, canvas) {
     var html = '<p class="verdict ' + (got ? 'good' : 'bad') + '">' + (got ? '예측이 맞았어요! 🎉' : '예측과 달랐어요. 괜찮아요, 이유를 확인해 봐요.') + ' <span class="sub">내가 고른 답: ' + MARK[S.order.indexOf(S.pick)] + ' ' + opts[S.pick].t + '</span></p>';
     html += '<div class="ans"><h4>정답: ' + MARK[S.order.indexOf(ok)] + ' ' + opts[ok].t + '</h4><p>' + opts[ok].why + '</p></div><h4 class="wrongh">나머지 보기가 틀린 이유</h4><ul class="why">';
     S.order.forEach(function (oi, k) { if (oi !== ok) html += '<li' + (oi === S.pick ? ' class="mine"' : '') + '><b>' + MARK[k] + ' ' + opts[oi].t + '</b><br>' + opts[oi].why + '</li>'; });
-    $('#answerBox').innerHTML = html + '</ul>';
+    $('#answerBox').innerHTML = mh(html + '</ul>');
     renderNotes(d); redrawPages(); play('flap');
     if (world) { world.setFlap('open', true); pose('flap'); }
     setPanel('answer', true);
@@ -2846,10 +2956,10 @@ function BookWorld(T, canvas) {
   }
   function renderNotes(d) {
     var t = (typeof TEACH !== 'undefined' && TEACH[d.id]) || { ask: [], simplify: '', misc: '', verify: '', data: '' };
-    $('#teacherBox').innerHTML = '<div class="notebox"><h4>수업에서 던질 질문</h4><ul>' + t.ask.map(function (q) { return '<li>' + q + '</li>'; }).join('') + '</ul><h4>모형이 단순화한 부분</h4><p>' + t.simplify + '</p><h4>자주 나오는 오개념</h4><p>' + t.misc + '</p><h4>계산을 확인한 방법</h4><p>' + t.verify + '</p></div>';
+    $('#teacherBox').innerHTML = mh('<div class="notebox"><h4>수업에서 던질 질문</h4><ul>' + t.ask.map(function (q) { return '<li>' + q + '</li>'; }).join('') + '</ul><h4>모형이 단순화한 부분</h4><p>' + t.simplify + '</p><h4>자주 나오는 오개념</h4><p>' + t.misc + '</p><h4>계산을 확인한 방법</h4><p>' + t.verify + '</p></div>');
     $('#sourceBox').innerHTML = '<table class="srctable"><tbody>' +
       '<tr><th scope="row">교과서 단원</th><td>' + d.source + '</td></tr>' +
-      '<tr><th scope="row">핵심 공식·정의</th><td>' + d.concept + '</td></tr>' +
+      '<tr><th scope="row">핵심 공식·정의</th><td>' + mh(d.concept) + '</td></tr>' +
       '<tr><th scope="row">수치의 출처</th><td>' + t.data + '</td></tr>' +
       '<tr><th scope="row">생략·가정한 조건</th><td>' + d.omitted + '</td></tr>' +
       '<tr><th scope="row">기준 교재</th><td>천재교육 「확률과 통계」(류희찬 외) 학생용·교사용 교과서의 용어·공식. 쪽수는 판에 따라 달라 단원 이름으로만 적었습니다.</td></tr>' +
@@ -2876,7 +2986,7 @@ function BookWorld(T, canvas) {
     html += '<div class="ans"><h4>정답: ' + MARK[S.aOrder.indexOf(ok)] + ' ' + opts[ok].t + '</h4><p>' + opts[ok].why + '</p></div><h4 class="wrongh">다른 보기가 틀린 이유</h4><ul class="why">';
     S.aOrder.forEach(function (oi, k) { if (oi !== ok) html += '<li' + (oi === S.aPick ? ' class="mine"' : '') + '><b>' + MARK[k] + ' ' + opts[oi].t + '</b><br>' + opts[oi].why + '</li>'; });
     html += '</ul>' + (got ? (S.idx < L.length - 1 ? '<button type="button" class="btn primary" id="btnNextLesson">다음 레슨 ▶</button>' : '') : '<button type="button" class="btn ghost" id="btnRetry">다시 풀기</button>');
-    $('#aResult').innerHTML = html; $('#aResult').hidden = false;
+    $('#aResult').innerHTML = mh(html); $('#aResult').hidden = false;
     $$('input[name=app]').forEach(function (x) { x.disabled = true; }); $('#btnCheck').disabled = true;
     if (got) {
       var first = !stamps[d.id]; stamps[d.id] = true; store.set('mathbook2.stamps', stamps); markToc(); play('ok');
@@ -2927,20 +3037,38 @@ function BookWorld(T, canvas) {
   function pauseDemo() { if (!demo) return; demo.paused = !demo.paused; toast(demo.paused ? '시연 일시정지 (스페이스로 계속)' : '시연 계속'); }
 
   /* ───────── 3D 화면 조작 ───────── */
+  /* 한 손가락(마우스) 끌기 = 돌리기, 두 손가락 = 벌려서 확대·모아서 축소 + 함께 끌어 옮기기,
+     마우스 오른쪽 버튼·Shift+끌기 = 옮기기, 휠 = 확대·축소, 두 번 누르기 = 시점 처음으로 */
   function bindCanvas() {
-    var cv = $('#scene'), drag = null, moved = 0, lastHover = 0;
-    cv.addEventListener('pointerdown', function (e) { drag = { x: e.clientX, y: e.clientY }; moved = 0; try { cv.setPointerCapture(e.pointerId); } catch (x) { /* 무시 */ } });
+    var cv = $('#scene'), drag = null, moved = 0, lastHover = 0, pts = {}, pinch = null, multi = false;
+    function two() { var k = Object.keys(pts); if (k.length < 2) return null; var a = pts[k[0]], b = pts[k[1]]; return { d: Math.max(20, Math.hypot(a.x - b.x, a.y - b.y)), x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; }
+    cv.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    cv.addEventListener('pointerdown', function (e) {
+      pts[e.pointerId] = { x: e.clientX, y: e.clientY }; try { cv.setPointerCapture(e.pointerId); } catch (x) { /* 무시 */ }
+      if (Object.keys(pts).length >= 2) { pinch = two(); multi = true; drag = null; cv.classList.add('drag'); return; }
+      drag = { x: e.clientX, y: e.clientY, pan: e.button === 2 || e.shiftKey }; moved = 0;
+    });
     cv.addEventListener('pointermove', function (e) {
-      if (drag) {
-        var dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY; moved += Math.abs(dx) + Math.abs(dy);
-        if (moved > 6) { cv.classList.add('drag'); world.orbit(-dx * 0.006, -dy * 0.004); }
+      if (pts[e.pointerId]) { pts[e.pointerId].x = e.clientX; pts[e.pointerId].y = e.clientY; }
+      if (pinch) {
+        var p = two(); if (!p) return;
+        world.orbit(0, 0, pinch.d / p.d); world.pan(p.x - pinch.x, p.y - pinch.y); pinch = p;
         return;
       }
+      if (drag) {
+        var dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY; moved += Math.abs(dx) + Math.abs(dy);
+        if (moved > 6) { cv.classList.add('drag'); if (drag.pan) world.pan(dx, dy); else world.orbit(-dx * 0.006, -dy * 0.004); }
+        return;
+      }
+      if (e.pointerType !== 'mouse') return;
       var now = performance.now(); if (now - lastHover < 90) return; lastHover = now;
       var h = world.pick(e.clientX, e.clientY);
       cv.classList.toggle('hot', !!h && (h.kind === 'flap' || (h.kind === 'model' && S.started) || S.idx < 0));
     });
     var up = function (e) {
+      delete pts[e.pointerId];
+      if (Object.keys(pts).length < 2) pinch = null;
+      if (multi) { if (!Object.keys(pts).length) { multi = false; cv.classList.remove('drag'); } drag = null; return; }   /* 두 손가락 동작 뒤에는 누르기로 치지 않음 */
       cv.classList.remove('drag'); if (!drag) return; drag = null;
       if (moved > 6 || e.type === 'pointercancel') return;
       var h = world.pick(e.clientX, e.clientY);
@@ -2952,7 +3080,7 @@ function BookWorld(T, canvas) {
       else if (h.kind === 'right' && !S.started) setPanel('predict', true);
     };
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
-    cv.addEventListener('wheel', function (e) { e.preventDefault(); world.orbit(0, 0, e.deltaY > 0 ? 1.1 : 0.9); }, { passive: false });
+    cv.addEventListener('wheel', function (e) { e.preventDefault(); world.orbit(0, 0, Math.pow(1.0015, MX.clamp(e.deltaY, -120, 120))); }, { passive: false });   /* 트랙패드 핀치(ctrl+휠)도 같은 방식으로 부드럽게 */
     cv.addEventListener('dblclick', function () { world.resetUser(); });
     cv.addEventListener('keydown', function (e) {
       var k = e.key, hnd = true;
@@ -3006,7 +3134,10 @@ function BookWorld(T, canvas) {
     $$('[data-teacher]').forEach(function (b) { b.addEventListener('click', function () { openTeacher(b.getAttribute('data-teacher')); }); });
     $('#tabT').addEventListener('click', function () { teacherTab('t'); });
     $('#tabS').addEventListener('click', function () { teacherTab('s'); });
-    $$('[data-close]').forEach(function (b) { b.addEventListener('click', function () { S.panel = null; layout(); if (S.started) pose('model'); }); });
+    $$('[data-close]').forEach(function (b) { b.addEventListener('click', function () {
+      S.panel = null; layout(); if (S.started) pose('model');
+      if (window.innerWidth <= 760 && !prefs.reopenHint) { prefs.reopenHint = true; save(); toast('책장을 누르면 창이 다시 열려요.'); }
+    }); });
     $('#btnOpen').addEventListener('click', function () { goLesson(0); });
     $('#btnCoverToc').addEventListener('click', function () { toggleToc(true); });
     $('#btnToc').addEventListener('click', function () { toggleToc(); });
@@ -3025,6 +3156,9 @@ function BookWorld(T, canvas) {
       prefs.theme = dark ? 'light' : 'dark'; save(); applyTheme();
     });
     $('#btnTeach').addEventListener('click', function () { openTeacher('t'); });
+    $('#zIn').addEventListener('click', function () { if (world) world.orbit(0, 0, 0.78); });
+    $('#zOut').addEventListener('click', function () { if (world) world.orbit(0, 0, 1.28); });
+    $('#zHome').addEventListener('click', function () { if (world) world.resetUser(); });
     $('#btnMode').addEventListener('click', function () { stopDemo(true); setMode(isBook() ? 'text' : 'book', true); });
     window.addEventListener('hashchange', function () { toggleToc(false); route(); });
     document.addEventListener('keydown', function (e) {
@@ -3037,7 +3171,7 @@ function BookWorld(T, canvas) {
         if (e.key === 'ArrowLeft' && !S.busy && S.idx >= 0) goLesson(S.idx - 1);
       }
     });
-    var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(layout, 120); });
+    var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { layout(); if (S.pose && !demo) pose(S.pose, true); }, 120); });
     if (window.matchMedia) { try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme); } catch (e) { /* 무시 */ } }
   }
 

@@ -19,6 +19,12 @@
   <canvas id="scene" tabindex="0" role="img" aria-label="책상 위에 놓인 확률과 통계 3D 교과서. 끌어서 시점을 돌리고, 휠로 확대·축소할 수 있어요."></canvas>
 </div>
 <p class="loading" id="loading" role="status">책을 꺼내는 중…</p>
+<!-- 터치 화면·좁은 화면용 확대·축소 버튼 (두 손가락으로도 됨) -->
+<div class="zoomctl glass" id="zoomCtl" role="group" aria-label="3D 확대·축소">
+  <button type="button" class="ib" id="zIn" aria-label="확대"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button type="button" class="ib" id="zOut" aria-label="축소"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+  <button type="button" class="ib" id="zHome" aria-label="시점 처음으로"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 3-6.2M4 4v5h5"/></svg></button>
+</div>
 
 <main id="main">
   <!-- 표지 카드 -->
@@ -69,6 +75,7 @@
             <button type="button" class="btn ghost sm" id="btnPause" aria-pressed="false">⏸ 움직임 멈춤</button>
             <span id="actions" class="row wrap"></span>
           </div>
+          <div class="keybox" id="keyBox" aria-live="polite"></div>
           <table class="readout" aria-live="polite"><caption>계산 결과</caption><tbody id="readout"></tbody></table>
           <div class="legend" id="legend"></div>
           <details class="fig2d"><summary>2D 그림과 생략한 조건</summary><svg id="svgFig" viewBox="0 0 420 220" role="img" aria-label=""></svg><p class="small" id="omitted"></p></details>

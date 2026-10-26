@@ -29,7 +29,11 @@ var PAGES = (function () {
     g.addColorStop(0, 'rgba(90,70,40,0.22)'); g.addColorStop(1, 'rgba(90,70,40,0)'); c.fillStyle = g; c.fillRect(0, 0, PW, PH);
   }
 
-  /* ── 글자 배치 (굵게 <b> 지원, 한글은 글자 단위 줄바꿈) ── */
+  /* ── 글자 배치 (굵게 <b> 지원, 한글은 글자 단위 줄바꿈) ──
+     6차: ₙ ᵣ ₊ ² ⁿ 같은 아래·위 첨자 유니코드는 글꼴마다 모양·크기가 달라 수식이 깨져 보였음
+          → 보통 글자로 바꾼 뒤 작게(0.66배) 내려(아래 첨자)·올려(위 첨자) 직접 그림 */
+  var SUBC = '₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₐₑₒₓₕₖₗₘₙₚₛₜᵢⱼᵣᵤᵥ', SUBN = '0123456789+−=()aeoxhklmnpstijruv';
+  var SUPC = '⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿⁱʳᶜˣᵏᵃᵇ', SUPN = '0123456789+−=()nircxkab';
   function decode(s) { return s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"'); }
   function chars(html) {
     var out = [], b = false;
@@ -37,56 +41,83 @@ var PAGES = (function () {
       if (/^<b>$/i.test(p) || /^<strong>$/i.test(p)) b = true;
       else if (/^<\/b>$/i.test(p) || /^<\/strong>$/i.test(p)) b = false;
       else if (/^</.test(p)) { /* 다른 태그는 버림 */ }
-      else decode(p).split('').forEach(function (ch) { out.push({ ch: ch, b: b }); });
+      else decode(p).split('').forEach(function (ch) {
+        var i = SUBC.indexOf(ch), j = SUPC.indexOf(ch);
+        if (i >= 0) out.push({ ch: SUBN[i], b: b, s: 1 }); else if (j >= 0) out.push({ ch: SUPN[j], b: b, s: 2 }); else out.push({ ch: ch, b: b, s: 0 });
+      });
     });
     return out;
   }
-  function plain(html) { return chars(html).map(function (x) { return x.ch; }).join(''); }
+  function plain(html) { return String(html).replace(/<[^>]+>/g, ''); }
+  /* HTML 화면용: 첨자 유니코드를 <sub>·<sup> 로 바꿔 글꼴에 상관없이 고르게 보이게 */
+  var reSub = new RegExp('[' + SUBC + ']+', 'g'), reSup = new RegExp('[' + SUPC + ']+', 'g');
+  function mh(s) {
+    var map = function (str, from, to) { return str.split('').map(function (ch) { return to[from.indexOf(ch)]; }).join(''); };
+    return String(s).replace(reSub, function (m) { return '<sub>' + map(m, SUBC, SUBN) + '</sub>'; }).replace(reSup, function (m) { return '<sup>' + map(m, SUPC, SUPN) + '</sup>'; });
+  }
   /* 쪽 전체 글자 배율: 내용이 넘치면 쪽을 다시 그리며 조금씩 줄임 */
   var K = 1, trunc = [];
   function fz(n) { return Math.round(n * K); }
+  var SS = 0.66;                                   /* 첨자 크기 비율 */
+  /* 글자 하나 그리기·재기 도우미 (첨자 포함) */
+  function fonts(size, o) {
+    var font = o.font || SERIF, w = o.weight || 400, ss = Math.max(8, Math.round(size * SS));
+    return { size: size, n: w + ' ' + size + 'px ' + font, b: '700 ' + size + 'px ' + font, sn: w + ' ' + ss + 'px ' + font, sb: '700 ' + ss + 'px ' + font };
+  }
+  function fontOf(F, q, bold) { var bb = q.b || bold; return q.s ? (bb ? F.sb : F.sn) : (bb ? F.b : F.n); }
+  function drawRun(c, ln, x, y, F, bold, cw) {
+    var xx = x;
+    ln.forEach(function (q) {
+      c.font = fontOf(F, q, bold);
+      c.fillText(q.ch, xx, y + (q.s === 1 ? F.size * 0.24 : q.s === 2 ? -F.size * 0.36 : 0));
+      xx += cw(q);
+    });
+    return xx - x;
+  }
   /* o: {size, min(줄 수가 넘치면 이 크기까지 줄임), font, color, lh, bold, weight, max(최대 줄 수), tag} → 마지막 y 반환
      3차: 말줄임(…)은 글자를 최소 크기까지 줄여도 안 들어갈 때만 쓰고, 그 경우 trunc 에 기록 */
   function layout(c, cs, w, size, o) {
-    var font = o.font || SERIF, fN = (o.weight || 400) + ' ' + size + 'px ' + font, fB = '700 ' + size + 'px ' + font, wcache = {};
-    function cw(ch, b) { var k = (b ? 'b' : 'n') + ch; if (wcache[k] === undefined) { c.font = b || o.bold ? fB : fN; wcache[k] = c.measureText(ch).width; } return wcache[k]; }
+    var F = fonts(size, o), wcache = {};
+    function cw(q) { var k = (q.b ? 'b' : 'n') + q.s + q.ch; if (wcache[k] === undefined) { c.font = fontOf(F, q, o.bold); wcache[k] = c.measureText(q.ch).width; } return wcache[k]; }
     var lines = [], line = [], width = 0, lastSpace = -1;
     cs.forEach(function (x) {
       if (x.ch === '\n') { lines.push(line); line = []; width = 0; lastSpace = -1; return; }
-      var ww = cw(x.ch, x.b);
+      var ww = cw(x);
       if (width + ww > w && line.length) {
         if (lastSpace > 0 && lastSpace > line.length - 14) { var rest = line.slice(lastSpace + 1); lines.push(line.slice(0, lastSpace)); line = rest; }
         else { lines.push(line); line = []; }
-        width = line.reduce(function (s, q) { return s + cw(q.ch, q.b); }, 0); lastSpace = -1;
+        width = line.reduce(function (s, q) { return s + cw(q); }, 0); lastSpace = -1;
         if (x.ch === ' ' && !line.length) return;
       }
       if (x.ch === ' ') lastSpace = line.length;
       line.push(x); width += ww;
     });
     if (line.length) lines.push(line);
-    return { lines: lines, cw: cw, fN: fN, fB: fB };
+    return { lines: lines, cw: cw, F: F };
   }
   function para(c, html, x, y, w, o) {
     o = o || {}; var base = fz(o.size || 26), min = Math.min(base, fz(o.min || o.size || 26)), size = base, cs = chars(html), L;
     for (; ; size--) { L = layout(c, cs, w, size, o); if (!o.max || L.lines.length <= o.max || size <= min) break; }
-    var lines = L.lines, cw = L.cw, lh = Math.round((o.lh ? fz(o.lh) : base * 1.55) * size / base);
+    var lines = L.lines, cw = L.cw, lh = Math.round((o.lh ? fz(o.lh) : base * 1.55) * size / base), ell = { ch: '…', b: false, s: 0 };
     if (o.max && lines.length > o.max) {
       trunc.push((o.tag || '글') + ': ' + plain(html).slice(0, 40));
-      lines = lines.slice(0, o.max); var l = lines[o.max - 1]; while (l.length && l.reduce(function (s, q) { return s + cw(q.ch, q.b); }, 0) > w - cw('…')) l.pop(); l.push({ ch: '…', b: false });
+      lines = lines.slice(0, o.max); var l = lines[o.max - 1]; while (l.length && l.reduce(function (s, q) { return s + cw(q); }, 0) > w - cw(ell)) l.pop(); l.push(ell);
     }
     c.fillStyle = o.color || INKC; c.textBaseline = 'alphabetic'; c.textAlign = 'left';
-    lines.forEach(function (ln, k) {
-      var xx = x, yy = y + k * lh + size;
-      ln.forEach(function (q) { c.font = q.b || o.bold ? L.fB : L.fN; c.fillText(q.ch, xx, yy); xx += cw(q.ch, q.b); });
-    });
+    lines.forEach(function (ln, k) { drawRun(c, ln, x, y + k * lh + size, L.F, o.bold, cw); });
     return y + lines.length * lh;
   }
   function text(c, s, x, y, font, color, align) { c.font = font; c.fillStyle = color || INKC; c.textAlign = align || 'left'; c.textBaseline = 'alphabetic'; c.fillText(s, x, y); }
-  /* 한 줄 글: maxW 를 넘으면 글자 크기를 줄여서 맞춤 */
+  /* 한 줄 글(첨자 포함): maxW 를 넘으면 글자 크기를 줄여서 맞춤. align: left | right | center */
   function fitText(c, s, x, y, maxW, size, pre, font, color, align) {
-    size = fz(size); c.font = pre + ' ' + size + 'px ' + font;
-    var tw = c.measureText(s).width; if (tw > maxW) { size = Math.max(10, Math.floor(size * maxW / tw)); }
-    text(c, s, x, y, pre + ' ' + size + 'px ' + font, color, align); return size;
+    var o = { font: font, weight: pre && /\d/.test(pre) ? pre : 400 }, cs = chars(s).filter(function (q) { return q.ch !== '\n'; });
+    size = fz(size);
+    var L = layout(c, cs, 1e9, size, o), tw = cs.reduce(function (t, q) { return t + L.cw(q); }, 0);
+    if (tw > maxW) { size = Math.max(10, Math.floor(size * maxW / tw)); L = layout(c, cs, 1e9, size, o); tw = cs.reduce(function (t, q) { return t + L.cw(q); }, 0); }
+    var x0 = align === 'right' ? x - tw : align === 'center' ? x - tw / 2 : x;
+    c.fillStyle = color || INKC; c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+    drawRun(c, cs, x0, y, L.F, false, L.cw);
+    return size;
   }
   function rrect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
   /* 손으로 그린 듯 흔들리는 선 */
@@ -126,18 +157,21 @@ var PAGES = (function () {
     fitText(c, d.title, L, 96 + fz(78), w, 64, '900', SERIF, INKC);
     y = para(c, d.concept, L, 96 + fz(94), w, { size: 25, min: 19, color: GRAY, max: 2, tag: '개념' });
 
-    /* 핵심 식 상자 (슬라이더와 함께 바뀜): 왼쪽 식, 오른쪽 값 — 서로 겹치지 않게 폭을 나눔 */
-    var rows = d.calc(st.v, st.env), em = rows.filter(function (r) { return r[2]; })[0] || rows[rows.length - 1];
-    y += fz(16); var bh = fz(116), valW = w * 0.34, labW = w - valW - 50;
+    /* 핵심 식 상자 — 6차: 위는 n, r 같은 미지수로 쓴 일반식(검정), 아래는 지금 값을 대입한 예시(파랑) */
+    var key = (typeof KEYS !== 'undefined' && KEYS[d.id]) || null, rows = d.calc(st.v, st.env), em = rows.filter(function (r) { return r[2]; })[0] || rows[rows.length - 1];
+    var gen = key ? key.f : em[0], ex = key ? key.ex(d, st.v, st.env) : String(em[1]);
+    y += fz(16); var bh = fz(132);
     c.fillStyle = 'rgba(242,234,214,0.75)'; rrect(c, L, y, w, bh, 12); c.fill(); c.strokeStyle = 'rgba(42,40,51,0.5)'; c.lineWidth = 2; c.stroke();
-    text(c, '핵심 식', L + 22, y + fz(34), '700 ' + fz(20) + 'px ' + SANS, RED);
-    para(c, em[0], L + 22, y + fz(40), labW, { size: 26, min: 17, weight: 700, max: 2, lh: 32, tag: '핵심 식' });
-    fitText(c, String(em[1]), R - 22, y + bh * 0.66, valW, 34, '700', SERIF, BLUE, 'right');
+    text(c, '핵심 식', L + 22, y + fz(32), '700 ' + fz(20) + 'px ' + SANS, RED);
+    fitText(c, gen, L + 22, y + fz(72), w - 44, 32, '700', SERIF, INKC, 'left');
+    text(c, '예', L + 22, y + fz(114), '700 ' + fz(19) + 'px ' + SANS, BLUE);
+    fitText(c, ex, L + 52, y + fz(114), w - 74, 28, '700', SERIF, BLUE, 'left');
     y += bh;
-    /* 여백의 손글씨 메모: 쪽 안쪽에 오른쪽 맞춤 */
-    var memo = d.slider.label.split(' ').pop() + ' = ' + d.slider.fmt(st.v) + '  →  ' + em[1];
-    c.save(); c.translate(R - 8, y + fz(40)); c.rotate(-0.035); fitText(c, memo, 0, 0, w * 0.75, 36, '', HAND, BLUE, 'right'); c.restore();
-    y += fz(56);
+    /* 여백의 손글씨 메모: 지금 슬라이더 값 (쪽 안쪽에 오른쪽 맞춤) */
+    var fv = d.slider.fmt(st.v), vm = d.slider.label.match(/(n\(A∩B\)|[a-zσ])(?![a-z가-힣])/gi), vn = vm ? vm[vm.length - 1] : '';
+    var memo = (/=/.test(fv) || !vn ? fv : vn + ' = ' + fv) + '일 때 ↑';
+    c.save(); c.translate(R - 8, y + fz(38)); c.rotate(-0.035); fitText(c, memo, 0, 0, w * 0.6, 34, '', HAND, BLUE, 'right'); c.restore();
+    y += fz(52);
 
     /* 상황 */
     y = para(c, d.situation, L, y, w, { size: 26, min: 19, max: 6, lh: 40, tag: '상황' }) + fz(12);
@@ -268,5 +302,5 @@ var PAGES = (function () {
   }
 
   /* 쪽 캔버스 좌표 → 책장 위치(0~1) */
-  return { PW: PW, PH: PH, FLAP: FLAP, STAMP: STAMP, make: make, copy: copy, drawLeft: drawLeft, drawRight: drawRight, fitSvg: fitSvg, drawCover: drawCover, plain: plain, MARK: MARK, HAND: HAND, SERIF: SERIF, SANS: SANS };
+  return { PW: PW, PH: PH, FLAP: FLAP, STAMP: STAMP, make: make, copy: copy, drawLeft: drawLeft, drawRight: drawRight, fitSvg: fitSvg, mh: mh, drawCover: drawCover, plain: plain, MARK: MARK, HAND: HAND, SERIF: SERIF, SANS: SANS };
 })();

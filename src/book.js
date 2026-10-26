@@ -241,7 +241,8 @@ function BookWorld(T, canvas) {
   this.redrawTags = function () { if (H) H.redrawTags(); };
 
   /* ── 카메라 ── */
-  var cur = { t: new T.Vector3(0, 0.6, 0.6), theta: 0, phi: 0.75, r: 22 }, goal = { t: new T.Vector3(0, 0.6, 0.6), theta: 0, phi: 0.75, R: 8 }, user = { dt: 0, dp: 0, z: 1 };
+  var cur = { t: new T.Vector3(0, 0.6, 0.6), theta: 0, phi: 0.75, r: 22 }, goal = { t: new T.Vector3(0, 0.6, 0.6), theta: 0, phi: 0.75, R: 8 }, user = { dt: 0, dp: 0, z: 1, px: 0, pz: 0 };   /* px·pz: 두 손가락으로 옮긴 만큼(책상 위 좌표) */
+  var gT = new T.Vector3();
   var ins = { l: 0, r: 0, b: 70, t: 0 }, vo = { x: 0, y: 0 }, snap = true;
   this.setInsets = function (o) { ins = o; };
   function fitR(R) {
@@ -288,11 +289,21 @@ function BookWorld(T, canvas) {
   /* p: {t:[x,y,z] 또는 Vector3, theta, phi, R(대략 크기), pts('spread'|'cover'|'flap'|'model': 이 범위가 다 보이게)} */
   this.poseTo = function (p, keepUser) {
     goal.t.copy(p.t.isVector3 ? p.t : new T.Vector3(p.t[0], p.t[1], p.t[2])); goal.theta = p.theta; goal.phi = p.phi; goal.R = p.R; goal.pts = p.pts || null; goal.min = p.min || 0;
-    if (!keepUser) { user.dt = 0; user.dp = 0; user.z = 1; }
+    if (!keepUser) { user.dt = 0; user.dp = 0; user.z = 1; user.px = 0; user.pz = 0; }
     if (self.still) snap = true;
   };
-  this.orbit = function (dt, dp, dz) { user.dt += dt; user.dp = MX.clamp(user.dp + dp, -0.6, 0.5); if (dz) user.z = MX.clamp(user.z * dz, 0.35, 2.2); if (self.still) snap = true; };
-  this.resetUser = function () { user.dt = 0; user.dp = 0; user.z = 1; if (self.still) snap = true; };
+  /* 6차: 휴대폰에서 글자를 읽을 만큼 가까이 갈 수 있게 최소 배율을 0.35 → 0.15 */
+  this.orbit = function (dt, dp, dz) { user.dt += dt; user.dp = MX.clamp(user.dp + dp, -0.6, 0.5); if (dz) user.z = MX.clamp(user.z * dz, 0.15, 2.2); if (self.still) snap = true; };
+  this.resetUser = function () { user.dt = 0; user.dp = 0; user.z = 1; user.px = 0; user.pz = 0; if (self.still) snap = true; };
+  /* 화면에서 손가락이 움직인 픽셀만큼 보는 곳을 책상 위에서 옮김 (내용이 손가락을 따라오게) */
+  this.pan = function (dxPx, dyPx) {
+    var h = canvas.clientHeight || 1, k = cur.r * 2 * Math.tan(cam.fov * Math.PI / 360) / h, th = cur.theta, sy = 1 / Math.max(0.35, Math.cos(cur.phi));
+    var rx = Math.cos(th), rz = -Math.sin(th), fx = -Math.sin(th), fz = -Math.cos(th);   /* 오른쪽, 앞(멀어지는 쪽) */
+    user.px = MX.clamp(user.px + (-dxPx * rx + dyPx * sy * fx) * k, -9, 9);
+    user.pz = MX.clamp(user.pz + (-dxPx * rz + dyPx * sy * fz) * k, -7, 7);
+    if (self.still) snap = true;
+  };
+  this.zoomLevel = function () { return user.z; };
   this.snapCam = function () { snap = true; };
 
   /* ── 고르기(클릭) ── */
@@ -342,7 +353,7 @@ function BookWorld(T, canvas) {
     var gth = goal.theta + user.dt, gph = MX.clamp(goal.phi + user.dp, 0.18, 1.45), pts = goal.pts ? ptsFor(goal.pts) : null;
     var gr = (pts ? Math.max(goal.min, fitPts(pts, goal.t, gth, gph)) : fitR(goal.R)) * user.z;
     var a = snap ? 1 : 1 - Math.exp(-dt * 3.2); snap = false;
-    cur.t.lerp(goal.t, a); cur.theta += (gth - cur.theta) * a; cur.phi += (gph - cur.phi) * a; cur.r += (gr - cur.r) * a;
+    gT.set(goal.t.x + user.px, goal.t.y, goal.t.z + user.pz); cur.t.lerp(gT, a); cur.theta += (gth - cur.theta) * a; cur.phi += (gph - cur.phi) * a; cur.r += (gr - cur.r) * a;
     var sp = Math.sin(cur.phi);
     cam.position.set(cur.t.x + cur.r * sp * Math.sin(cur.theta), cur.t.y + cur.r * Math.cos(cur.phi), cur.t.z + cur.r * sp * Math.cos(cur.theta));
     cam.lookAt(cur.t);
