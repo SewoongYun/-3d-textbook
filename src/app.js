@@ -151,7 +151,7 @@
   function stepNo() { return S.aOk ? 5 : S.revealed ? (S.aChecked ? 4 : 3) : S.started ? 2 : 1; }
   var STEP_TXT = ['', '예측 — 내 답을 먼저 골라요', '실험 — 슬라이더를 움직이거나 모형을 눌러 보세요', '정답 — 덮개 아래 이유를 확인해요', '도전 — 다른 상황에 적용해 봐요', '완료 — 도장 쾅! 다음 레슨으로 ▶'];
   function setCap(num, txt, n, on) {
-    $('#capNum').textContent = num; $('#capTxt').textContent = txt;
+    $('#capNum').textContent = num; $('#capTxt').innerHTML = mh(txt);   /* 8차: 시연 자막의 수식도 첨자·분수로 */
     var h = ''; for (var i = 0; i < n; i++) h += '<i' + (i === on ? ' class="on"' : '') + '></i>'; $('#capDots').innerHTML = h;
   }
   function updateBar() {
@@ -303,7 +303,7 @@
       '<tr><th scope="row">수치의 출처</th><td>' + t.data + '</td></tr>' +
       '<tr><th scope="row">생략·가정한 조건</th><td>' + d.omitted + '</td></tr>' +
       '<tr><th scope="row">기준</th><td>2022 개정 교육과정 「확률과 통계」(교육부 고시 제2022-33호)의 성취기준과 용어·기호를 기준으로 했습니다. 상황·수치·문제는 모두 이 교재가 새로 만든 가상의 것이며 특정 교과서의 예제·문제를 옮기지 않았습니다.</td></tr>' +
-      '<tr><th scope="row">연출 참고</th><td>Techartist의 Every Joule(iamtechartist.com)에서 “책상 위 3D 책, 잉크 모형, 예측·실험·증명, 정답 덮개, 도장”의 아이디어만 참고했습니다. 그 책의 코드·그림·글은 사용하지 않았습니다.</td></tr>' +
+      '<tr><th scope="row">연출 참고</th><td>Techartist의 Every Joule(iamtechartist.com)에서 “책상 위 3D 책, 잉크 모형, 예측·실험·확인의 흐름, 정답 덮개, 도장”의 아이디어만 참고했습니다. 그 책의 코드·그림·글은 사용하지 않았습니다.</td></tr>' +
       '</tbody></table>';
   }
   function teacherTab(which) {

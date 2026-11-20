@@ -31,54 +31,70 @@ var PAGES = (function () {
 
   /* ── 글자 배치 (굵게 <b> 지원, 한글은 글자 단위 줄바꿈) ──
      6차: ₙ ᵣ ₊ ² ⁿ 같은 아래·위 첨자 유니코드는 글꼴마다 모양·크기가 달라 수식이 깨져 보였음
-          → 보통 글자로 바꾼 뒤 작게(0.66배) 내려(아래 첨자)·올려(위 첨자) 직접 그림 */
-  var SUBC = '₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₐₑₒₓₕₖₗₘₙₚₛₜᵢⱼᵣᵤᵥ', SUBN = '0123456789+−=()aeoxhklmnpstijruv';
-  var SUPC = '⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿⁱʳᶜˣᵏᵃᵇ', SUPN = '0123456789+−=()nircxkab';
+          → 보통 글자로 바꾼 뒤 작게(0.66배) 내려(아래 첨자)·올려(위 첨자) 직접 그림
+     8차: a/b 꼴 분수는 세로 분수(분자 위·분모 아래, 가운데 가로선)로 그림 (분수 찾기는 math.js) */
+  var SUBC = MATH.SUBC, SUBN = MATH.SUBN, SUPC = MATH.SUPC, SUPN = MATH.SUPN;
   function decode(s) { return s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"'); }
+  function glyphs(s, b) {
+    return s.split('').map(function (ch) {
+      var i = SUBC.indexOf(ch), j = SUPC.indexOf(ch);
+      return i >= 0 ? { ch: SUBN[i], b: b, s: 1 } : j >= 0 ? { ch: SUPN[j], b: b, s: 2 } : { ch: ch, b: b, s: 0 };
+    });
+  }
   function chars(html) {
     var out = [], b = false;
     String(html).replace(/<br\s*\/?>/gi, '\n').split(/(<[^>]+>)/).forEach(function (p) {
       if (/^<b>$/i.test(p) || /^<strong>$/i.test(p)) b = true;
       else if (/^<\/b>$/i.test(p) || /^<\/strong>$/i.test(p)) b = false;
       else if (/^</.test(p)) { /* 다른 태그는 버림 */ }
-      else decode(p).split('').forEach(function (ch) {
-        var i = SUBC.indexOf(ch), j = SUPC.indexOf(ch);
-        if (i >= 0) out.push({ ch: SUBN[i], b: b, s: 1 }); else if (j >= 0) out.push({ ch: SUPN[j], b: b, s: 2 }); else out.push({ ch: ch, b: b, s: 0 });
+      else MATH.segments(decode(p)).forEach(function (g) {
+        if (g.t === 's') Array.prototype.push.apply(out, glyphs(g.s, b));
+        else out.push({ ch: '', b: b, s: 0, frac: { n: glyphs(g.n, b), d: glyphs(g.d, b) } });
       });
     });
     return out;
   }
   function plain(html) { return String(html).replace(/<[^>]+>/g, ''); }
-  /* HTML 화면용: 첨자 유니코드를 <sub>·<sup> 로 바꿔 글꼴에 상관없이 고르게 보이게 */
-  var reSub = new RegExp('[' + SUBC + ']+', 'g'), reSup = new RegExp('[' + SUPC + ']+', 'g');
-  function mh(s) {
-    var map = function (str, from, to) { return str.split('').map(function (ch) { return to[from.indexOf(ch)]; }).join(''); };
-    return String(s).replace(reSub, function (m) { return '<sub>' + map(m, SUBC, SUBN) + '</sub>'; }).replace(reSup, function (m) { return '<sup>' + map(m, SUPC, SUPN) + '</sup>'; });
-  }
+  /* HTML 화면용 수식(첨자·분수·낭독용 글)은 math.js 에서 만듦 */
+  var mh = MATH.html;
   /* 쪽 전체 글자 배율: 내용이 넘치면 쪽을 다시 그리며 조금씩 줄임 */
   var K = 1, trunc = [];
   function fz(n) { return Math.round(n * K); }
-  var SS = 0.66;                                   /* 첨자 크기 비율 */
+  var SS = 0.66, FR = 0.7;                         /* 첨자 크기 비율, 분수 글자 크기 비율 */
   /* 글자 하나 그리기·재기 도우미 (첨자 포함) */
   function fonts(size, o) {
     var font = o.font || SERIF, w = o.weight || 400, ss = Math.max(8, Math.round(size * SS));
     return { size: size, n: w + ' ' + size + 'px ' + font, b: '700 ' + size + 'px ' + font, sn: w + ' ' + ss + 'px ' + font, sb: '700 ' + ss + 'px ' + font };
   }
   function fontOf(F, q, bold) { var bb = q.b || bold; return q.s ? (bb ? F.sb : F.sn) : (bb ? F.b : F.n); }
-  function drawRun(c, ln, x, y, F, bold, cw) {
+  /* 한 크기의 글자 폭 재기 (캐시) */
+  function meter(c, F, bold) {
+    var cache = {};
+    return function (q) { var k = (q.b ? 'b' : 'n') + q.s + q.ch; if (cache[k] === undefined) { c.font = fontOf(F, q, bold); cache[k] = c.measureText(q.ch).width; } return cache[k]; };
+  }
+  function sumW(list, w) { return list.reduce(function (a, q) { return a + w(q); }, 0); }
+  function drawPlain(c, list, x, y, F, bold, w) {
     var xx = x;
+    list.forEach(function (q) { c.font = fontOf(F, q, bold); c.fillText(q.ch, xx, y + (q.s === 1 ? F.size * 0.24 : q.s === 2 ? -F.size * 0.36 : 0)); xx += w(q); });
+  }
+  function drawRun(c, ln, x, y, L, bold) {
+    var xx = x, F = L.F;
     ln.forEach(function (q) {
-      c.font = fontOf(F, q, bold);
-      c.fillText(q.ch, xx, y + (q.s === 1 ? F.size * 0.24 : q.s === 2 ? -F.size * 0.36 : 0));
-      xx += cw(q);
+      if (q.frac) {                                 /* 세로 분수 */
+        var w = L.cw(q), nw = sumW(q.frac.n, L.cwF), dw = sumW(q.frac.d, L.cwF), cx = xx + w / 2;
+        drawPlain(c, q.frac.n, cx - nw / 2, y - F.size * 0.42, L.Ff, bold, L.cwF);
+        drawPlain(c, q.frac.d, cx - dw / 2, y + F.size * 0.36, L.Ff, bold, L.cwF);
+        c.fillRect(xx + F.size * 0.06, y - F.size * 0.29, w - F.size * 0.12, Math.max(1, F.size * 0.055));
+      } else { c.font = fontOf(F, q, bold); c.fillText(q.ch, xx, y + (q.s === 1 ? F.size * 0.24 : q.s === 2 ? -F.size * 0.36 : 0)); }
+      xx += L.cw(q);
     });
     return xx - x;
   }
   /* o: {size, min(줄 수가 넘치면 이 크기까지 줄임), font, color, lh, bold, weight, max(최대 줄 수), tag} → 마지막 y 반환
      3차: 말줄임(…)은 글자를 최소 크기까지 줄여도 안 들어갈 때만 쓰고, 그 경우 trunc 에 기록 */
   function layout(c, cs, w, size, o) {
-    var F = fonts(size, o), wcache = {};
-    function cw(q) { var k = (q.b ? 'b' : 'n') + q.s + q.ch; if (wcache[k] === undefined) { c.font = fontOf(F, q, o.bold); wcache[k] = c.measureText(q.ch).width; } return wcache[k]; }
+    var F = fonts(size, o), Ff = fonts(Math.max(8, Math.round(size * FR)), o), cwP = meter(c, F, o.bold), cwF = meter(c, Ff, o.bold);
+    function cw(q) { return q.frac ? Math.max(sumW(q.frac.n, cwF), sumW(q.frac.d, cwF)) + size * 0.24 : cwP(q); }
     var lines = [], line = [], width = 0, lastSpace = -1;
     cs.forEach(function (x) {
       if (x.ch === '\n') { lines.push(line); line = []; width = 0; lastSpace = -1; return; }
@@ -93,7 +109,7 @@ var PAGES = (function () {
       line.push(x); width += ww;
     });
     if (line.length) lines.push(line);
-    return { lines: lines, cw: cw, F: F };
+    return { lines: lines, cw: cw, cwF: cwF, F: F, Ff: Ff };
   }
   function para(c, html, x, y, w, o) {
     o = o || {}; var base = fz(o.size || 26), min = Math.min(base, fz(o.min || o.size || 26)), size = base, cs = chars(html), L;
@@ -104,11 +120,16 @@ var PAGES = (function () {
       lines = lines.slice(0, o.max); var l = lines[o.max - 1]; while (l.length && l.reduce(function (s, q) { return s + cw(q); }, 0) > w - cw(ell)) l.pop(); l.push(ell);
     }
     c.fillStyle = o.color || INKC; c.textBaseline = 'alphabetic'; c.textAlign = 'left';
-    lines.forEach(function (ln, k) { drawRun(c, ln, x, y + k * lh + size, L.F, o.bold, cw); });
+    lines.forEach(function (ln, k) { drawRun(c, ln, x, y + k * lh + size, L, o.bold); });
     return y + lines.length * lh;
   }
   function text(c, s, x, y, font, color, align) { c.font = font; c.fillStyle = color || INKC; c.textAlign = align || 'left'; c.textBaseline = 'alphabetic'; c.fillText(s, x, y); }
-  /* 한 줄 글(첨자 포함): maxW 를 넘으면 글자 크기를 줄여서 맞춤. align: left | right | center */
+  /* 한 줄 글(첨자·분수 포함)의 폭 */
+  function measureLine(c, s, size, pre, font) {
+    var o = { font: font, weight: pre && /\d/.test(pre) ? pre : 400 }, cs = chars(s).filter(function (q) { return q.ch !== '\n'; }), L = layout(c, cs, 1e9, size, o);
+    return cs.reduce(function (t, q) { return t + L.cw(q); }, 0);
+  }
+  /* 한 줄 글(첨자·분수 포함): maxW 를 넘으면 글자 크기를 줄여서 맞춤. align: left | right | center */
   function fitText(c, s, x, y, maxW, size, pre, font, color, align) {
     var o = { font: font, weight: pre && /\d/.test(pre) ? pre : 400 }, cs = chars(s).filter(function (q) { return q.ch !== '\n'; });
     size = fz(size);
@@ -116,7 +137,7 @@ var PAGES = (function () {
     if (tw > maxW) { size = Math.max(10, Math.floor(size * maxW / tw)); L = layout(c, cs, 1e9, size, o); tw = cs.reduce(function (t, q) { return t + L.cw(q); }, 0); }
     var x0 = align === 'right' ? x - tw : align === 'center' ? x - tw / 2 : x;
     c.fillStyle = color || INKC; c.textAlign = 'left'; c.textBaseline = 'alphabetic';
-    drawRun(c, cs, x0, y, L.F, false, L.cw);
+    drawRun(c, cs, x0, y, L, false);
     return size;
   }
   function rrect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
@@ -283,7 +304,7 @@ var PAGES = (function () {
     var R = MX.rng(5); for (var i = 0; i < 9000; i++) { c.fillStyle = 'rgba(120,70,0,' + (R() * 0.06) + ')'; c.fillRect(R() * W, R() * H, 2, 2); }
     c.strokeStyle = 'rgba(110,62,0,0.65)'; c.lineWidth = 4; c.strokeRect(46, 46, W - 92, H - 92); c.lineWidth = 1.5; c.strokeRect(62, 62, W - 124, H - 124);
     text(c, '확률과 통계', W / 2, 250, '900 120px ' + SERIF, '#5a3500', 'center');
-    text(c, '3D 교과서 · 예측하고 실험하고 증명하기', W / 2, 322, '500 40px ' + SERIF, '#6b4300', 'center');
+    text(c, '3D 교과서 · 예측하고 실험하고 이유 확인하기', W / 2, 322, '500 40px ' + SERIF, '#6b4300', 'center');
     /* 붙인 그림 종이 */
     var px = 230, py = 430, pw = 640, ph = 700;
     c.fillStyle = 'rgba(0,0,0,0.12)'; c.fillRect(px + 10, py + 12, pw, ph);
@@ -304,5 +325,5 @@ var PAGES = (function () {
   }
 
   /* 쪽 캔버스 좌표 → 책장 위치(0~1) */
-  return { PW: PW, PH: PH, FLAP: FLAP, STAMP: STAMP, make: make, copy: copy, drawLeft: drawLeft, drawRight: drawRight, fitSvg: fitSvg, mh: mh, drawCover: drawCover, plain: plain, MARK: MARK, HAND: HAND, SERIF: SERIF, SANS: SANS };
+  return { PW: PW, PH: PH, FLAP: FLAP, STAMP: STAMP, make: make, copy: copy, drawLeft: drawLeft, drawRight: drawRight, fitSvg: fitSvg, mh: mh, fitText: fitText, measureLine: measureLine, drawCover: drawCover, plain: plain, MARK: MARK, HAND: HAND, SERIF: SERIF, SANS: SANS };
 })();

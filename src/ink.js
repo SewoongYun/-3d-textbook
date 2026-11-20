@@ -93,12 +93,13 @@ var INK = (function () {
   var HAND = '"Nanum Pen Script","Segoe Print","Comic Sans MS",cursive';
   function drawTag(cv, text, o) {
     var c = cv.getContext('2d'); c.clearRect(0, 0, cv.width, cv.height);
-    var fs = 76; c.font = fs + 'px ' + HAND;
-    var w = c.measureText(text).width; if (w > 210) { fs = Math.floor(fs * 210 / w); c.font = fs + 'px ' + HAND; w = c.measureText(text).width; }
-    var bw = Math.max(70, w + 34), bh = 84, x = 128 - bw / 2, y = 64 - bh / 2;
+    /* 8차: 꼬리표 글도 책장과 같은 방식(첨자·세로 분수)으로 그림. 분수가 있으면 위아래 공간이 필요해 글자를 줄임 */
+    var frac = typeof MATH !== 'undefined' && MATH.hasFrac(text), fs = frac ? 54 : 76;
+    var w = PAGES.measureLine(c, text, fs, '', HAND); if (w > 210) { fs = Math.floor(fs * 210 / w); w = PAGES.measureLine(c, text, fs, '', HAND); }
+    var bw = Math.max(70, w + 34), bh = frac ? 104 : 84, x = 128 - bw / 2, y = 64 - bh / 2;
     c.fillStyle = 'rgba(255,253,246,0.94)'; c.strokeStyle = '#2a2833'; c.lineWidth = 3;
     c.beginPath(); if (c.roundRect) c.roundRect(x, y, bw, bh, 8); else c.rect(x, y, bw, bh); c.fill(); c.stroke();
-    c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = (o && o.color) || '#2a2833'; c.fillText(text, 128, 68);
+    PAGES.fitText(c, text, 128, 64 + fs * (frac ? 0.3 : 0.32), 1e9, fs, '', HAND, (o && o.color) || '#2a2833', 'center');
   }
 
   /* 레슨의 build3d(X)에 넘기는 도우미 H */

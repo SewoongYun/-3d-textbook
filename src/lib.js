@@ -66,6 +66,8 @@ var SV = (function () {
   var f = function (x) { return Math.round(x * 100) / 100; };
   var t = function (x, y, s, o) {
     o = o || {};
+    /* 8차: 분수(a/b)가 있으면 세로 분수로 그림 (math.js; 검산처럼 math.js 없이 불러도 그대로 동작) */
+    if (typeof MATH !== 'undefined' && MATH.hasFrac(String(s))) return MATH.svgText(x, y, String(s), o);
     return '<text x="' + f(x) + '" y="' + f(y) + '" font-size="' + (o.size || 12) + '" text-anchor="' + (o.anchor || 'middle') + '" fill="' + (o.fill || 'currentColor') + '"' + (o.weight ? ' font-weight="' + o.weight + '"' : '') + '>' + s + '</text>';
   };
   var c = function (x, y, r, fill, o) {

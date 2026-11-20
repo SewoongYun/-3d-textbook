@@ -21,7 +21,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
         { t: '3가지가 더 늘어난다 (+3)', ok: false, why: '새로 늘린 칸에도 색을 3가지 중에서 고를 수 있습니다. 이 선택이 기존의 모든 신호마다 따로 붙으므로 더하기가 아니라 곱하기입니다.' },
         { t: '4가지가 더 늘어난다 (+4)', ok: false, why: '4는 칸의 수일 뿐 색의 가짓수가 아닙니다. 늘어나는 것은 “색을 고르는 선택”이므로 3과 관계됩니다.' },
         { t: '2배가 된다', ok: false, why: '색이 2가지일 때의 이야기입니다. 이 문제에서는 새 칸에 3가지 색을 고를 수 있습니다.' },
-        { t: '3배가 된다', ok: true, why: '기존의 신호 하나하나 뒤에 3가지 색 중 하나를 붙일 수 있으므로 3배가 됩니다. 그래서 r칸이면 3×3×…×3(r번)=3ʳ가지입니다.' }
+        { t: '3배가 된다', ok: true, why: '기존의 신호 하나하나 뒤에 3가지 색 중 하나를 붙일 수 있으므로 3배가 됩니다. 그래서 r칸이면 3×3×⋯×3(r번)=3ʳ가지입니다.' }
       ]
     },
     slider: { label: '칸의 수 r', min: 1, max: 6, step: 1, value: 3, fmt: function (v) { return v + '칸'; } },
@@ -100,7 +100,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
 
   /* ───────── 2. 같은 것이 있는 순열 ───────── */
   LESSONS.push({
-    id: 'dup', unit: UNIT, title: '같은 것이 있는 순열', concept: 'n개 중에서 같은 것이 각각 p개, q개, …, r개씩 있을 때, n개를 일렬로 나열하는 순열의 수는 n!/(p!q!⋯r!)',
+    id: 'dup', unit: UNIT, title: '같은 것이 있는 순열', concept: 'n개 중에서 같은 것이 각각 p개, q개, …, r개씩 있을 때, n개를 일렬로 나열하는 순열의 수는 n!/(p!q!⋯r!) (단, p+q+⋯+r=n)',
     source: 'Ⅰ. 경우의 수 › 순열과 조합 › 같은 것이 있는 순열',
     terms: [['같은 것이 있는 순열', 'n개 중에서 같은 것이 각각 p개, q개, …, r개씩 있을 때, n개를 일렬로 나열하는 순열. 그 수는 n!/(p!q!⋯r!) (단, p+q+⋯+r=n)']],
     situation: '구슬 5개를 일렬로 놓습니다. 그중 <b>k개는 똑같은 빨간 구슬</b>이고, 나머지는 서로 다른 색입니다. 빨간 구슬끼리 자리를 바꿔도 보기에는 달라지지 않습니다.',
@@ -115,7 +115,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
     },
     slider: { label: '빨간 구슬의 수 k', min: 1, max: 5, step: 1, value: 3, fmt: function (v) { return v + '개'; } },
     calc: function (k) {
-      return [['모두 다르다고 볼 때 5!', '120가지'], ['빨간 구슬끼리 바꾸는 k!', fact(k) + '가지씩 겹침'], ['서로 다른 배열 5! ÷ k!', 120 / fact(k) + '가지', 1]];
+      return [['모두 다르다고 볼 때 5!', '120가지'], ['빨간 구슬끼리 바꾸는 k!', fact(k) + '가지씩 겹침'], ['서로 다른 배열 5!/k! (단, 빨간 구슬 k개 외에는 모두 다름)', 120 / fact(k) + '가지', 1]];
     },
     svgAlt: '빨간 구슬 k개와 다른 색 구슬이 일렬로 놓인 그림과 계산식',
     svg: function (k) {
@@ -189,7 +189,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
     },
     slider: { label: '고르는 개수 r', min: 1, max: 6, step: 1, value: 3, fmt: function (v) { return v + '개'; } },
     calc: function (r) {
-      return [['공 r개 + 칸막이 2개를 놓는 칸', (r + 2) + '칸'], ['칸막이 자리 고르기 ₍r+2₎C₂', nCr(r + 2, 2) + '가지'], ['중복조합의 수 ₃Hᵣ = ₍₃₊ᵣ₋₁₎Cᵣ', '₃H' + sub(r) + ' = ' + sub(r + 2) + 'C' + sub(r) + ' = ' + nHr(3, r) + '가지', 1]];
+      return [['공 r개 + 칸막이 2개를 놓는 칸', (r + 2) + '칸'], ['칸막이 자리 고르기 ᵣ₊₂C₂', nCr(r + 2, 2) + '가지'], ['중복조합의 수 ₃Hᵣ = ₃₊ᵣ₋₁Cᵣ', '₃H' + sub(r) + ' = ' + sub(r + 2) + 'C' + sub(r) + ' = ' + nHr(3, r) + '가지', 1]];
     },
     svgAlt: '공과 칸막이를 일렬로 놓는 그림과 중복조합 계산식',
     svg: function (r) {
@@ -256,7 +256,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
 
   /* ───────── 4. 이항정리 ───────── */
   LESSONS.push({
-    id: 'binom', unit: UNIT, title: '이항정리와 파스칼의 삼각형', concept: '(a+b)ⁿ의 전개식의 계수는 조합의 수 ₙCᵣ',
+    id: 'binom', unit: UNIT, title: '이항정리와 파스칼의 삼각형', concept: '(a+b)ⁿ의 전개식에서 aⁿ⁻ʳbʳ 항의 계수는 ₙCᵣ (r=0, 1, 2, ⋯, n)',
     source: 'Ⅰ. 경우의 수 › 이항정리',
     terms: [['이항정리', '(a+b)ⁿ = ₙC₀aⁿ + ₙC₁aⁿ⁻¹b + ⋯ + ₙCᵣaⁿ⁻ʳbʳ + ⋯ + ₙCₙbⁿ'], ['이항계수', '이항정리의 전개식에서 각 항의 계수 ₙC₀, ₙC₁, …, ₙCₙ'], ['일반항', '전개식의 각 항 ₙCᵣaⁿ⁻ʳbʳ'], ['파스칼의 삼각형', '이항계수를 삼각형 모양으로 배열한 것. ₙ₋₁Cᵣ₋₁ + ₙ₋₁Cᵣ = ₙCᵣ']],
     situation: '(a+b)⁵ = (a+b)(a+b)(a+b)(a+b)(a+b)를 전개합니다. 다섯 개의 괄호에서 <b>a 또는 b 중 하나씩</b> 골라 곱한 것을 모두 더하는 일입니다.',
@@ -272,7 +272,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
     slider: { label: '지수 n', min: 1, max: 8, step: 1, value: 5, fmt: function (v) { return 'n = ' + v; } },
     calc: function (n) {
       var row = [], i; for (i = 0; i <= n; i++) row.push(nCr(n, i));
-      return [['이항정리', '(a+b)' + sup(n) + ' = Σ ₙCᵣ aⁿ⁻ʳbʳ'], ['이항계수 ₙC₀ ~ ₙCₙ', row.join(', ')], ['계수의 합 = 2ⁿ', row.reduce(function (a, b) { return a + b; }, 0) + ' = 2' + sup(n), 1]];
+      return [['이항정리', '(a+b)' + sup(n) + ' = ' + sub(n) + 'C₀a' + sup(n) + ' + ' + sub(n) + 'C₁a' + sup(n - 1) + 'b + ⋯ + ' + sub(n) + 'C' + sub(n) + 'b' + sup(n)], ['이항계수 ₙC₀ ~ ₙCₙ', row.join(', ')], ['계수의 합 = 2ⁿ', row.reduce(function (a, b) { return a + b; }, 0) + ' = 2' + sup(n), 1]];
     },
     svgAlt: '파스칼의 삼각형과 n번째 줄 강조 표시',
     svg: function (n) {

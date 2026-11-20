@@ -2,7 +2,7 @@
    7차: 원순열 삭제, 모든 문제 숫자 변경, 모비율의 추정 추가. 정답 보기의 글이 직접 센 값과 같은지도 확인합니다. */
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const ctx = vm.createContext({ console, Math, Object, Array, String, Number, JSON });
-['lib.js', 'lessons_1.js', 'lessons_2.js', 'lessons_3.js'].forEach(f => vm.runInContext(fs.readFileSync(path.join(__dirname, 'src', f), 'utf8'), ctx, { filename: f }));
+['lib.js', 'math.js', 'lessons_1.js', 'lessons_2.js', 'lessons_3.js'].forEach(f => vm.runInContext(fs.readFileSync(path.join(__dirname, 'src', f), 'utf8'), ctx, { filename: f }));
 const L = vm.runInContext('LESSONS', ctx), MX = vm.runInContext('MX', ctx);
 let fail = 0, pass = 0;
 const ok = (c, msg) => { if (c) pass++; else { fail++; console.log('  ✗ 실패:', msg); } };
@@ -123,6 +123,15 @@ ok(cell('norm', 10, 'P(X ≥ 70)').length > 0 && cell('norm', 10, 'P(X ≥ 70)')
   const se2 = Math.sqrt(0.36 * 0.64 / 100); ok((0.36 - 1.96 * se2).toFixed(3) === '0.266' && (0.36 + 1.96 * se2).toFixed(3) === '0.454', 'prop 예측 구간 0.266~0.454');
   for (const n of [100, 400]) { let tot = 0, runs = 40; for (let s = 1; s <= runs; s++) tot += parseInt(cell('prop', n, '모비율 p=0.4를 포함한 구간', s)); near(tot / runs, 95, 2, 'prop n=' + n + ' 평균 포함 개수 ≈ 95 (' + tot / runs + ')'); }
   const l100 = parseFloat(cell('prop', 100, '구간의 길이')), l400 = parseFloat(cell('prop', 400, '구간의 길이')); near(l100 / l400, 2, 0.1, 'prop n을 4배 → 길이 약 1/2 (' + (l100 / l400).toFixed(3) + ')'); }
+
+// 8차: 분수 찾기와 낭독 표현 (math.js)
+{ const MATH = vm.runInContext('MATH', ctx), seg = s => MATH.segments(s).map(g => g.t === 's' ? g.s : '[' + g.n + '|' + g.d + ']').join('');
+  [['1/6은', '[1|6]은'], ['(r−1)/(r+4)', '[r−1|r+4]'], ['P(A∩B)/P(A)', '[P(A∩B)|P(A)]'], ['σ/√n', '[σ|√n]'], ['n!/(p!q!⋯r!)', '[n!|p!q!⋯r!]'], ['√((0.6×0.4)/600)', '√([0.6×0.4|600])'], ['3.5 / 1.708', '3.5 / 1.708'], ['n(A)/n(S)', '[n(A)|n(S)]']]
+    .forEach(c => ok(seg(c[0]) === c[1], '분수 찾기 ' + c[0] + ' → ' + seg(c[0])));
+  [['3³', '3의 세제곱'], ['₅C₂', '5개 중 2개를 택하는 조합의 수'], ['1/6', '6분의 1'], ['ₙHᵣ', 'n개 중 r개를 택하는 중복조합의 수'], ['P(Aᶜ)', 'P(A의 여사건)'], ['p̂', 'p 햇']]
+    .forEach(c => ok(MATH.read(c[0]).replace(/\s+/g, ' ').trim() === c[1], '낭독 ' + c[0] + ' → ' + MATH.read(c[0]).trim()));
+  /* 화면에 보이는 모든 글에서 분수로 잘못 잡힌 것(분자·분모에 한글)이 없는지 */
+  L.forEach(d => { [d.concept, d.situation, d.predict.q, d.apply.q, ...d.terms.flat(), ...d.predict.options.flatMap(o => [o.t, o.why]), ...d.apply.options.flatMap(o => [o.t, o.why])].forEach(s => MATH.segments(s).forEach(g => { if (g.t === 'f') ok(!/[가-힣\s]/.test(g.n + g.d), d.id + ' 분수 조각 이상: ' + g.n + '/' + g.d); })); }); }
 
 console.log(fail ? '\n실패 ' + fail + '건 / 통과 ' + pass + '건' : '\n모든 검사 통과 (' + pass + '건)');
 process.exit(fail ? 1 : 0);

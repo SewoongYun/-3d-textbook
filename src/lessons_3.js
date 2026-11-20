@@ -11,9 +11,9 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
     return { E: E, E2: E2, V: V, s: Math.sqrt(V), simple: (3 + a) / 3 };
   }
   LESSONS.push({
-    id: 'expect', unit: UNIT, title: '이산확률변수의 기댓값', concept: 'E(X) = x₁p₁ + x₂p₂ + … + xₙpₙ',
+    id: 'expect', unit: UNIT, title: '이산확률변수의 기댓값', concept: 'E(X) = x₁p₁ + x₂p₂ + ⋯ + xₙpₙ',
     source: 'Ⅲ. 통계 › 확률분포 › 이산확률변수의 기댓값과 표준편차',
-    terms: [['확률변수 X', '어떤 시행에서 표본공간의 각 원소에 하나의 실수를 대응시키는 것'], ['이산확률변수', '확률변수 X가 가질 수 있는 값이 유한개이거나, 자연수와 같이 셀 수 있을 때'], ['기댓값(평균) E(X)', 'E(X) = x₁p₁ + x₂p₂ + ⋯ + xₙpₙ. 확률변수 X의 평균이라고도 한다'], ['분산 V(X)·표준편차 σ(X)', 'V(X) = E((X−m)²) = E(X²) − {E(X)}², σ(X) = √V(X)']],
+    terms: [['확률변수 X', '어떤 시행에서 표본공간의 각 원소에 하나의 실수를 대응시키는 것'], ['이산확률변수', '확률변수 X가 가질 수 있는 값이 유한개이거나, 자연수와 같이 셀 수 있을 때'], ['기댓값(평균) E(X)', 'E(X) = x₁p₁ + x₂p₂ + ⋯ + xₙpₙ. 확률변수 X의 평균이라고도 한다'], ['분산 V(X)·표준편차 σ(X)', 'V(X) = E((X−m)²) = E(X²) − {E(X)}² (단, m=E(X)), σ(X) = √V(X)']],
     situation: '뽑기 게임에서 점수 X가 <b>1점(확률 1/2), 2점(확률 1/3), a점(확률 1/6)</b>으로 나옵니다(가상의 게임). 게임을 아주 많이 되풀이했을 때 한 번당 평균 점수는 얼마일까요?',
     predict: {
       q: 'a=10일 때 한 번당 평균 점수 E(X)는 얼마일까요?',
@@ -27,7 +27,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
     slider: { label: '가장 높은 점수 a', min: 3, max: 15, step: 1, value: 10, fmt: function (v) { return v + '점'; } },
     calc: function (a) {
       var s = stats11(a);
-      return [['E(X) = 1·½ + 2·⅓ + a·⅙', MX.frac(7 + a, 6) + ' ≈ ' + fx(s.E, 3), 1], ['(참고) 확률을 무시한 단순 평균', fx(s.simple, 3)], ['E(X²) = 1²·½ + 2²·⅓ + a²·⅙', MX.frac(11 + a * a, 6) + ' ≈ ' + fx(s.E2, 3)], ['V(X) = E(X²) − {E(X)}²', MX.frac(5 * a * a - 14 * a + 17, 36) + ' ≈ ' + fx(s.V, 3)], ['표준편차 σ(X) = √V(X)', fx(s.s, 3)]];
+      return [['E(X) = 1×1/2 + 2×1/3 + a×1/6', MX.frac(7 + a, 6) + ' ≈ ' + fx(s.E, 3), 1], ['(참고) 확률을 무시한 단순 평균', fx(s.simple, 3)], ['E(X²) = 1²×1/2 + 2²×1/3 + a²×1/6', MX.frac(11 + a * a, 6) + ' ≈ ' + fx(s.E2, 3)], ['V(X) = E(X²) − {E(X)}²', MX.frac(5 * a * a - 14 * a + 17, 36) + ' ≈ ' + fx(s.V, 3)], ['표준편차 σ(X) = √V(X)', fx(s.s, 3)]];
     },
     svgAlt: '점수 1, 2, a의 확률 막대와 평균 위치를 나타낸 수직선',
     svg: function (a) {
@@ -85,9 +85,9 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
 
   /* ───────── 11. 이항분포 ───────── */
   LESSONS.push({
-    id: 'bin', unit: UNIT, title: '이항분포', concept: 'X ~ B(n, p)이면 E(X)=np, V(X)=np(1−p)',
+    id: 'bin', unit: UNIT, title: '이항분포', concept: '확률변수 X가 이항분포 B(n, p)를 따르면 E(X)=np, V(X)=npq, σ(X)=√(npq) (단, q=1−p)',
     source: 'Ⅲ. 통계 › 확률분포 › 이항분포',
-    terms: [['이항분포 B(n, p)', '한 번의 시행에서 사건 A가 일어날 확률이 p일 때, n번의 독립시행에서 사건 A가 일어나는 횟수 X의 확률분포. P(X=r) = ₙCᵣ pʳ qⁿ⁻ʳ (q=1−p)'], ['평균 E(X)', 'E(X) = np'], ['분산 V(X)', 'V(X) = npq (단, q=1−p), 표준편차 σ(X) = √(npq)'], ['큰 수의 법칙', '사건 A가 일어날 확률이 p일 때, 시행 횟수 n을 크게 할수록 상대도수 X/n이 p에 가까울 확률이 1에 가까워진다']],
+    terms: [['이항분포 B(n, p)', '한 번의 시행에서 사건 A가 일어날 확률이 p일 때, n번의 독립시행에서 사건 A가 일어나는 횟수 X의 확률분포. P(X=r) = ₙCᵣ pʳ qⁿ⁻ʳ (q=1−p)'], ['평균 E(X)', 'E(X) = np'], ['분산 V(X)', 'V(X) = npq (단, q=1−p), 표준편차 σ(X) = √(npq)'], ['큰 수의 법칙', '확률변수 X가 이항분포 B(n, p)를 따를 때, 아무리 작은 양수 h를 정해도 n을 충분히 크게 하면 P(|X/n − p| < h)가 1에 가까워진다']],
     situation: '갈톤 보드(못 판)에서 구슬이 못에 부딪힐 때마다 <b>오른쪽으로 갈 확률이 p</b>, 왼쪽은 1−p입니다. 못 10단을 지나 오른쪽으로 간 횟수 X(0~10)에 해당하는 칸에 구슬이 모입니다. 즉 X는 이항분포 B(10, p)를 따릅니다.',
     predict: {
       q: '오른쪽으로 갈 확률이 p=0.7일 때, 구슬이 가장 많이 모이는 칸은 어디일까요? (칸 번호는 오른쪽으로 간 횟수 0~10)',
@@ -207,7 +207,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
     slider: { label: '표준편차 σ', min: 5, max: 15, step: 1, value: 5, fmt: function (v) { return 'σ = ' + v + '점'; } },
     calc: function (s) {
       var z = 10 / s;
-      return [['정규분포', 'N(60, ' + s + '²)'], ['곡선의 최고 높이 f(m) = 1/(σ√2π)', fx(MX.pdf(60, 60, s), 4)], ['곡선과 x축 사이의 전체 넓이', '1 (σ에 관계없이)', 1], ['P(m−σ ≤ X ≤ m+σ)', fx(Phi(1) - Phi(-1), 4)], ['P(m−2σ ≤ X ≤ m+2σ)', fx(Phi(2) - Phi(-2), 4)], ['P(X ≥ 70) = P(Z ≥ ' + fx(z, 2) + ')', fx(1 - Phi(z), 4)]];
+      return [['정규분포', 'N(60, ' + s + '²)'], ['곡선의 최고 높이 f(m) = 1/(σ√(2π))', fx(MX.pdf(60, 60, s), 4)], ['곡선과 x축 사이의 전체 넓이', '1 (σ에 관계없이)', 1], ['P(m−σ ≤ X ≤ m+σ)', fx(Phi(1) - Phi(-1), 4)], ['P(m−2σ ≤ X ≤ m+2σ)', fx(Phi(2) - Phi(-2), 4)], ['P(X ≥ 70) = P(Z ≥ ' + fx(z, 2) + ')', fx(1 - Phi(z), 4)]];
     },
     svgAlt: '평균 60, 표준편차 σ인 정규분포 곡선과 ±1σ, ±2σ, ±3σ 구간',
     svg: function (s) {
@@ -280,10 +280,10 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
   }
   var SIG14 = Math.sqrt(35 / 12);
   LESSONS.push({
-    id: 'xbar', unit: UNIT, title: '표본평균의 분포', concept: 'E(X̄)=m, σ(X̄)=σ/√n',
+    id: 'xbar', unit: UNIT, title: '표본평균의 분포', concept: '모평균 m, 모표준편차 σ인 모집단에서 크기 n인 표본을 임의추출할 때 E(X̄)=m, V(X̄)=σ²/n, σ(X̄)=σ/√n',
     source: 'Ⅲ. 통계 › 통계적 추정 › 모집단과 표본 (표본평균의 분포)',
     terms: [['모집단', '통계 조사에서 조사의 대상이 되는 집단 전체'], ['표본', '조사하기 위하여 모집단에서 뽑은 일부분'], ['임의추출', '모집단에 속하는 각 대상이 같은 확률로 추출되도록 하는 방법'], ['표본평균 X̄', '모집단에서 임의추출한 크기가 n인 표본의 평균. 표본에 따라 달라지는 확률변수이며 E(X̄)=m, σ(X̄)=σ/√n'], ['전수조사·표본조사', '모집단 전체를 조사하는 것이 전수조사, 모집단의 일부(표본)를 뽑아 조사하는 것이 표본조사']],
-    situation: '공정한 주사위를 한 번 던져 나온 눈이 모집단의 값입니다(모평균 m=3.5, 모표준편차 σ=√(35/12)≈1.708). 주사위를 <b>n번 던져 눈의 평균(표본평균 X̄)</b>을 구하는 일을 2000번 되풀이하면, X̄의 값들은 어떤 모양으로 흩어질까요?',
+    situation: '공정한 주사위를 한 번 던져 나온 눈이 모집단의 값입니다(모평균 m=3.5, 모표준편차 σ=√(35/12)≈1.708). 주사위를 <b>n번 던져 눈의 평균(표본평균 X̄)</b>을 구하는 일을 2000번 되풀이하면, X̄의 값들은 어떤 모양으로 흩어질까요? (주황 곡선은 비교용 정규근사입니다.)',
     predict: {
       q: '던지는 횟수(표본의 크기)를 n=1에서 n=25로 늘리면, 표본평균 X̄의 값들이 흩어진 정도(표준편차)는 어떻게 될까요?',
       options: [
@@ -299,20 +299,22 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
       var s = sim14(env.seed, n);
       return [['모평균 m / 모표준편차 σ', '3.5 / ' + fx(SIG14, 3)], ['E(X̄) = m', '3.5'], ['σ(X̄) = σ/√n', fx(SIG14 / Math.sqrt(n), 3), 1], ['모의실험(2000번)의 X̄ 평균', fx(s.mean, 3)], ['모의실험(2000번)의 X̄ 표준편차', fx(s.sd, 3)]];
     },
-    svgAlt: '주사위 n번 평균의 모의실험 히스토그램과 정규분포 곡선',
+    svgAlt: '주사위 n번 평균의 모의실험 히스토그램과 비교용 정규근사 곡선',
     svg: function (n, env) {
       var s = sim14(env.seed, n), out = '', base = 178, X = function (x) { return 30 + (x - 0.875) / 5.25 * 360; }, scale = 150, i;
       for (i = 0; i <= 20; i++) { var dens = s.bins[i] / (s.T * 0.25), h = dens * scale; out += r_(X(1 + i * 0.25 - 0.125), base - h, 360 / 21 - 1, h, '#4f8fdc'); }
       var pts = [], sd = SIG14 / Math.sqrt(n); for (i = 0; i <= 120; i++) { var x = 0.875 + 5.25 * i / 120; pts.push(X(x) + ',' + (base - MX.pdf(x, 3.5, sd) * scale)); }
-      out += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + COL.amber + '" stroke-width="2.5"/>';
+      /* 8차: 주황 곡선은 X̄의 정확한 분포가 아니라 비교용 정규근사. n이 작으면 점선으로 흐리게 */
+      out += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + COL.amber + '" stroke-width="2.5"' + (n < 5 ? ' stroke-dasharray="6 4" opacity="0.6"' : '') + '/>';
+      if (n < 5) out += t(390, 36, 'n이 작아 X̄는 띄엄띄엄한 값만 가짐 — 곡선은 비교용', { anchor: 'end', size: 10, fill: COL.amber });
       out += l(26, base, 394, base);
       for (i = 1; i <= 6; i++) out += t(X(i), base + 15, i, { size: 10 });
-      out += t(210, 16, 'n = ' + n + ' · 표본평균 X̄의 분포 (주황: N(3.5, σ²/n))', { size: 11, weight: 700 });
+      out += t(210, 16, 'n = ' + n + ' · 표본평균 X̄의 분포 (주황: 비교용 정규근사 N(3.5, σ²/n))', { size: 11, weight: 700 });
       return out;
     },
-    omitted: '2000번의 모의실험은 표본평균의 분포를 근사한 것입니다(같은 시작값이면 같은 결과). 주사위는 공정하고 던질 때마다 서로 영향을 주지 않는 것으로 가정합니다. 막대의 넓이는 상대도수에 맞춰 그렸습니다(높이=밀도).',
+    omitted: '주황 곡선 N(3.5, σ²/n)은 X̄의 정확한 분포가 아니라 비교용 정규근사입니다. 주사위 눈의 평균 X̄는 띄엄띄엄한 값(n=1이면 1~6)만 가지는 이산확률변수이며, n이 커질수록 막대 모양이 곡선에 가까워집니다. 2000번의 모의실험은 표본평균의 분포를 근사한 것입니다(같은 시작값이면 같은 결과). 주사위는 공정하고 던질 때마다 서로 영향을 주지 않는 것으로 가정합니다. 막대의 넓이는 상대도수에 맞춰 그렸습니다(높이=밀도).',
     actions: [{ label: '2000번 다시 해 보기', seedStep: true }],
-    legend: [['#4f8fdc', '모의실험 X̄의 분포'], [COL.amber, '이론 곡선 N(3.5, σ²/n)'], [COL.gray, '모집단(주사위 한 번)']],
+    legend: [['#4f8fdc', '모의실험 X̄의 분포'], [COL.amber, '비교용 정규근사 곡선 N(3.5, σ²/n)'], [COL.gray, '모집단(주사위 한 번)']],
     apply: {
       q: '모집단이 정규분포 N(80, 12²)을 따른다. 크기가 36인 표본을 임의추출할 때, 표본평균 X̄가 84 이상일 확률은 얼마일까요? (P(0≤Z≤1)=0.3413, P(0≤Z≤2)=0.4772)',
       options: [
@@ -324,7 +326,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
     },
     build3d: function (X) {
       var T = X.T, H = X.H, g = X.g, bars = [], cur = [], tgt = [], SC = 3.2;
-      /* 뒤: X̄의 분포(빛나는 파랑 막대 + 주황 이론 곡선), 앞: 모집단(주사위 한 번 — 1~6이 똑같이 1/6)의 낮은 블록.
+      /* 뒤: X̄의 분포(빛나는 파랑 막대 + 주황 비교용 정규근사 곡선), 앞: 모집단(주사위 한 번 — 1~6이 똑같이 1/6)의 낮은 블록.
          2차는 모집단 블록이 막대 뒤에 있어 가려지고 섞여 보였음 */
       var floor = H.box(11.5, 0.1, 1.6, '#e9e4d8'); floor.position.set(0, -0.05, 0); g.add(floor);
       for (var i = 0; i < 21; i++) { var b = H.box(0.46, 1, 0.8, '#4f8fdc'); b.position.set((i - 10) * 0.52, 0.5, 0); g.add(b); bars.push(b); cur.push(0); tgt.push(0); }
@@ -334,7 +336,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
         var pb = H.box(1.2, 0.45, 0.9, '#b8b4ac'); pb.position.set(((k - 1) * 4 - 10) * 0.52, 0.225, 2.4); g.add(pb);
       }
       var pl = H.label('모집단: 주사위 한 번(1~6 각 1/6)', { size: 0.7 }); pl.position.set(0, 1.5, 3.2); g.add(pl);
-      var curve = new T.Line(new T.BufferGeometry(), new T.LineBasicMaterial({ color: COL.amber })); g.add(curve);
+      var curve = new T.Line(new T.BufferGeometry(), new T.LineBasicMaterial({ color: COL.amber, transparent: true })); g.add(curve);
       return {
         cam: { theta: 0.3, phi: 1.2, r: 15, t: [0, 1.3, -0.5], bookPhi: 0.9 },
         update: function (n, env) {
@@ -342,7 +344,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
           for (i = 0; i <= 20; i++) tgt[i] = s.bins[i] / (s.T * 0.25) * SC;
           var sd = SIG14 / Math.sqrt(n);
           for (i = 0; i <= 120; i++) { var x = 0.875 + 5.25 * i / 120; pts.push(new T.Vector3((x - 3.5) / 0.25 * 0.52, MX.pdf(x, 3.5, sd) * SC + 0.05, 0.5)); }
-          curve.geometry.setFromPoints(pts);
+          curve.geometry.setFromPoints(pts); curve.material.opacity = n < 5 ? 0.35 : 1;   /* n이 작으면 비교용 곡선을 흐리게 */
         },
         tick: function (time, dt) {
           var k = dt > 0 ? 1 - Math.exp(-dt * 6) : 1;
@@ -355,7 +357,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
   /* ───────── 14. 모평균의 추정 ───────── */
   function z15(seed) { var R = MX.rng(seed * 53 + 11), a = []; for (var i = 0; i < 100; i++) a.push(MX.normal(R)); return a; }
   LESSONS.push({
-    id: 'ci', unit: UNIT, title: '모평균의 추정과 신뢰구간', concept: '신뢰도 95%: x̄ − 1.96·σ/√n ≤ m ≤ x̄ + 1.96·σ/√n',
+    id: 'ci', unit: UNIT, title: '모평균의 추정과 신뢰구간', concept: '모집단이 정규분포이고 모표준편차 σ를 알 때, 모평균 m의 신뢰도 95% 신뢰구간: x̄ − 1.96·σ/√n ≤ m ≤ x̄ + 1.96·σ/√n',
     source: 'Ⅲ. 통계 › 통계적 추정 › 모평균의 추정',
     terms: [['모평균 m', '모집단의 평균. 보통 알 수 없어서 표본을 이용하여 추정한다'], ['추정', '표본에서 얻은 정보를 이용하여 모평균과 같은 모집단의 특성을 추측하는 것'], ['신뢰구간', '모평균 m에 대한 신뢰도 95%의 신뢰구간: x̄ − 1.96·σ/√n ≤ m ≤ x̄ + 1.96·σ/√n'], ['신뢰도 95%', '크기가 n인 표본을 여러 번 임의추출하여 신뢰구간을 만들면, 그중 약 95%가 모평균 m을 포함한다는 뜻']],
     situation: '모표준편차가 σ=10인 정규분포 모집단에서 크기 n의 표본을 뽑아 표본평균 x̄를 구하고, 모평균 m의 신뢰도 95% 신뢰구간 <b>x̄ ± 1.96·σ/√n</b>을 만듭니다. 이 일을 100번 되풀이한 결과가 3D에 줄지어 있습니다. (실제 모평균은 50이지만, 연구자는 모른다고 가정합니다.)',
@@ -476,7 +478,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
       options: [
         { t: '0.5992 ≤ p ≤ 0.6008', ok: false, why: '√(p̂q̂/n) 대신 p̂q̂/n=0.24/600=0.0004를 쓴 값입니다. 표준편차에는 제곱근을 씌워야 합니다.' },
         { t: '0.5484 ≤ p ≤ 0.6516', ok: false, why: '신뢰도 99%에 쓰는 2.58을 곱한 값(0.6±2.58×0.02)입니다. 95%에서는 1.96을 씁니다.' },
-        { t: '0.5608 ≤ p ≤ 0.6392', ok: true, why: 'p̂=360/600=0.6, √(p̂q̂/n)=√(0.6×0.4/600)=√0.0004=0.02이므로 0.6−1.96×0.02 ≤ p ≤ 0.6+1.96×0.02, 곧 0.5608 ≤ p ≤ 0.6392입니다.' },
+        { t: '0.5608 ≤ p ≤ 0.6392', ok: true, why: 'p̂=360/600=0.6, √(p̂q̂/n)=√((0.6×0.4)/600)=√0.0004=0.02이므로 0.6−1.96×0.02 ≤ p ≤ 0.6+1.96×0.02, 곧 0.5608 ≤ p ≤ 0.6392입니다.' },
         { t: '0.58 ≤ p ≤ 0.62', ok: false, why: '0.6±0.02, 곧 1.96을 곱하지 않은 값입니다. 신뢰도 95%의 구간은 표준편차의 1.96배만큼 양쪽으로 넓힙니다.' }
       ]
     },

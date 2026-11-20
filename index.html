@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>확률과 통계 3D 교과서</title>
-<meta name="description" content="책상 위에 펼친 3D 책에서 2022 개정 교육과정 「확률과 통계」 핵심 개념 15개를 예측 → 실험 → 증명 순서로 배웁니다.">
+<meta name="description" content="책상 위에 펼친 3D 책에서 2022 개정 교육과정 「확률과 통계」 핵심 개념 15개를 예측 → 실험 → 정답과 이유 확인 순서로 배웁니다.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;700;900&display=swap">
@@ -95,6 +95,11 @@ fieldset.q legend { font-family: var(--serif); font-weight: 700; font-size: 18px
 .sliderrow input { flex: 1; accent-color: var(--blue); height: 28px; }
 .sliderrow output { min-width: 76px; text-align: right; font: 700 20px var(--serif); color: var(--blue); }
 sub, sup { font-size: .68em; line-height: 0; position: relative; vertical-align: baseline; }
+/* 8차: 세로 분수와 화면 낭독용 글(화면에는 안 보이고 스크린리더만 읽음) */
+.frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; font-size: .84em; line-height: 1.15; margin: 0 .1em; text-align: center; }
+.frac .fn { border-bottom: .08em solid currentColor; padding: 0 .15em .05em; }
+.frac .fd { padding: .05em .15em 0; }
+.sr { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 sub { top: .3em; } sup { top: -.45em; }
 .keybox { margin: 10px 0 4px; padding: 10px 12px; border-radius: 12px; background: rgba(242, 234, 214, .55); border: 1px solid var(--line); }
 .keybox .kl { font: 700 12px var(--sans); color: var(--red); letter-spacing: .06em; }
@@ -242,11 +247,11 @@ body.book .lock { display: none; }
   <section id="cover" class="glass panel coverCard" aria-labelledby="coverH">
     <p class="kicker">고등학교 · 확률과 통계</p>
     <h1 id="coverH">확률과 통계 <span>3D 교과서</span></h1>
-    <p class="lead">책장 위로 일어서는 잉크 모형으로 「확률과 통계」 핵심 개념 15개를 <b>예측 → 실험 → 증명</b> 순서로 배웁니다.</p>
+    <p class="lead">책장 위로 일어서는 잉크 모형으로 「확률과 통계」 핵심 개념 15개를 <b>예측 → 실험 → 정답과 이유 확인</b> 순서로 배웁니다.</p>
     <ol class="how">
       <li><b>예측</b> 일상 상황을 읽고 내 답을 먼저 고르기</li>
       <li><b>실험</b> 모형이 책장 위로 일어서면 슬라이더로 조건 바꾸기</li>
-      <li><b>증명</b> 종이 덮개를 들춰 정답과 틀린 보기의 이유 확인</li>
+      <li><b>확인</b> 종이 덮개를 들춰 정답과 틀린 보기의 이유 확인</li>
       <li><b>도전</b> 다른 상황 문제를 맞히면 책장에 도장 쾅</li>
     </ol>
     <div class="row wrap">
@@ -332,7 +337,7 @@ body.book .lock { display: none; }
   </article>
 
   <footer class="foot" id="foot">
-    <p>3D 장면은 이해를 돕기 위한 단순한 모형입니다. 내용은 2022 개정 교육과정 「확률과 통계」(교육부 고시 제2022-33호)의 성취기준과 용어·기호를 기준으로 했습니다. 상황·수치·문제는 모두 이 교재가 새로 만든 가상의 것이며 특정 교과서의 예제·문제를 옮기지 않았습니다. 책상 위 3D 책의 연출(예측 → 실험 → 증명, 정답 덮개, 도장, 교사용 노트·출처)은 Techartist의 Every Joule에서 아이디어를 얻었으며, 그 책의 코드·그림·글은 사용하지 않았습니다.</p>
+    <p>3D 장면은 이해를 돕기 위한 단순한 모형입니다. 내용은 2022 개정 교육과정 「확률과 통계」(교육부 고시 제2022-33호)의 성취기준과 용어·기호를 기준으로 했습니다. 상황·수치·문제는 모두 이 교재가 새로 만든 가상의 것이며 특정 교과서의 예제·문제를 옮기지 않았습니다. 책상 위 3D 책의 연출(예측 → 실험 → 정답과 이유 확인, 정답 덮개, 도장, 교사용 노트·출처)은 Techartist의 Every Joule에서 아이디어를 얻었으며, 그 책의 코드·그림·글은 사용하지 않았습니다.</p>
   </footer>
 </main>
 
@@ -427,6 +432,8 @@ var SV = (function () {
   var f = function (x) { return Math.round(x * 100) / 100; };
   var t = function (x, y, s, o) {
     o = o || {};
+    /* 8차: 분수(a/b)가 있으면 세로 분수로 그림 (math.js; 검산처럼 math.js 없이 불러도 그대로 동작) */
+    if (typeof MATH !== 'undefined' && MATH.hasFrac(String(s))) return MATH.svgText(x, y, String(s), o);
     return '<text x="' + f(x) + '" y="' + f(y) + '" font-size="' + (o.size || 12) + '" text-anchor="' + (o.anchor || 'middle') + '" fill="' + (o.fill || 'currentColor') + '"' + (o.weight ? ' font-weight="' + o.weight + '"' : '') + '>' + s + '</text>';
   };
   var c = function (x, y, r, fill, o) {
@@ -447,6 +454,148 @@ var SV = (function () {
 })();
 
 if (typeof module !== 'undefined') module.exports = { MX: MX, COL: COL, PAL: PAL, SV: SV };
+
+/* math.js — 수식 표시 공통 도우미 (8차)
+   · 분수: 글 속의 a/b(공백 없이 붙은 것)를 찾아 세로 분수(분자 위·분모 아래)로 그림
+           예) 1/6, (r−1)/(r+4) → 분자 r−1·분모 r+4 (묶음 괄호는 뺌), P(A∩B)/P(A), σ/√n, n!/(p!q!⋯r!)
+           띄어 쓴 “3.5 / 1.708”처럼 앞뒤에 공백이 있는 / 는 분수가 아님
+   · 화면 낭독: 위첨자·아래첨자·분수·조합 기호를 “3의 세제곱”, “6분의 1”, “5개 중 2개를 택하는 조합의 수”처럼 읽히게
+   책장(캔버스)은 pages.js, 패널(HTML)은 html(), 2D 그림(SVG)은 svgText()를 씀 */
+var MATH = (function () {
+  var SUBC = '₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₐₑₒₓₕₖₗₘₙₚₛₜᵢⱼᵣᵤᵥ', SUBN = '0123456789+−=()aeoxhklmnpstijruv';
+  var SUPC = '⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿⁱʳᶜˣᵏᵃᵇ', SUPN = '0123456789+−=()nircxkab';
+  var HAT = '̂', BAR = '̄';
+
+  /* 분수의 분자·분모가 될 수 있는 글자: 영문·숫자·소수점·!·그리스 문자·첨자·⋯·모자(̂)·막대(̄) */
+  function atomCh(ch) { return !!ch && (/[0-9A-Za-z.!σπμ⋯]/.test(ch) || SUBC.indexOf(ch) >= 0 || SUPC.indexOf(ch) >= 0 || ch === HAT || ch === BAR); }
+  function matchBack(s, i) { var dep = 0; for (var j = i; j >= 0; j--) { if (s[j] === ')') dep++; else if (s[j] === '(') { dep--; if (dep === 0) return j; } } return -1; }
+  function matchFwd(s, i) { var dep = 0; for (var j = i; j < s.length; j++) { if (s[j] === '(') dep++; else if (s[j] === ')') { dep--; if (dep === 0) return j; } } return -1; }
+
+  /* 분자: / 바로 앞 덩어리 → {start, text} */
+  function numerator(s, i) {
+    var j = i - 1, start, txt;
+    if (s[j] === ')') {
+      var o = matchBack(s, j); if (o < 0) return null;
+      var k = o; while (k > 0 && /[A-Za-zσ]/.test(s[k - 1])) k--;      /* P(A∩B), n(A)처럼 이름이 붙은 괄호는 그대로 */
+      if (k < o) { start = k; txt = s.slice(k, j + 1); } else { start = o; txt = s.slice(o + 1, j); }   /* 묶음 괄호는 뺌 */
+    } else {
+      var k2 = i; while (k2 > 0 && atomCh(s[k2 - 1])) k2--;
+      if (k2 === i) return null;
+      if (k2 > 0 && s[k2 - 1] === '√') k2--;
+      start = k2; txt = s.slice(k2, i);
+    }
+    return txt ? { start: start, text: txt } : null;
+  }
+  /* 분모: / 바로 뒤 덩어리 → {end(다음 글자 위치), text} */
+  function denominator(s, i) {
+    var j = i + 1, end, txt, root = '';
+    if (s[j] === '√') { root = '√'; j++; }
+    if (s[j] === '(') {
+      var c = matchFwd(s, j); if (c < 0) return null;
+      txt = root ? '√' + s.slice(j, c + 1) : s.slice(j + 1, c); end = c + 1;     /* √(…)는 괄호를 남기고, 묶음 괄호는 뺌 */
+    } else {
+      var k = j; while (k < s.length && atomCh(s[k])) k++;
+      if (k === j) return null;
+      if (s[k] === '(' && /[A-Za-z]$/.test(s.slice(j, k))) { var c2 = matchFwd(s, k); if (c2 > 0) k = c2 + 1; }   /* n(S), P(A) */
+      txt = root + s.slice(j, k); end = k;
+    }
+    return txt ? { end: end, text: txt } : null;
+  }
+  /* 글 → [{t:'s', s:글}, {t:'f', n:분자, d:분모}, …] */
+  function segments(s) {
+    s = String(s); var out = [], last = 0;
+    for (var i = 1; i < s.length - 1; i++) {
+      if (s[i] !== '/' || /\s/.test(s[i - 1]) || /\s/.test(s[i + 1]) || s[i - 1] === '<' || s[i + 1] === '>') continue;
+      var n = numerator(s, i), d = n && denominator(s, i);
+      if (!n || !d || n.start < last) continue;
+      if (n.start > last) out.push({ t: 's', s: s.slice(last, n.start) });
+      out.push({ t: 'f', n: n.text, d: d.text });
+      last = d.end; i = d.end - 1;
+    }
+    if (last < s.length) out.push({ t: 's', s: s.slice(last) });
+    return out;
+  }
+  function hasFrac(s) { return segments(s).some(function (g) { return g.t === 'f'; }); }
+
+  /* ── 화면 낭독용 문장 ── */
+  var mapCh = function (str, from, to) { return str.split('').map(function (ch) { return to[from.indexOf(ch)]; }).join(''); };
+  var reSub = new RegExp('[' + SUBC + ']+', 'g'), reSup = new RegExp('[' + SUPC + ']+', 'g');
+  var reComb = new RegExp('([' + SUBC + ']+)([CPΠH])([' + SUBC + ']+)', 'g');
+  var COMB = { C: '조합', P: '순열', 'Π': '중복순열', H: '중복조합' };
+  function power(m) { return m === 'c' ? '의 여사건' : m === '2' ? '의 제곱' : m === '3' ? '의 세제곱' : m === '4' ? '의 네제곱' : '의 ' + m + '제곱'; }
+  function combRead(a, k, b) { return mapCh(a, SUBC, SUBN) + '개 중 ' + mapCh(b, SUBC, SUBN) + '개를 택하는 ' + COMB[k] + '의 수'; }
+  function readPart(s) {
+    return String(s).replace(reComb, function (m, a, k, b) { return ' ' + combRead(a, k, b) + ' '; })
+      .replace(/([A-Za-z])̂/g, '$1 햇').replace(/([A-Za-z])̄/g, '$1 바')
+      .replace(reSup, function (m) { return power(mapCh(m, SUPC, SUPN)); })
+      .replace(reSub, function (m) { return ' ' + mapCh(m, SUBC, SUBN); })
+      .replace(/√/g, '루트 ');
+  }
+  /* 분수까지 포함한 전체 읽기 */
+  function read(s) {
+    return segments(s).map(function (g) { return g.t === 's' ? readPart(g.s) : ' ' + readPart(g.d) + '분의 ' + readPart(g.n) + ' '; }).join('').replace(/\s+/g, ' ');
+  }
+
+  /* ── HTML: 보이는 수식은 aria-hidden, 낭독용 글은 .sr (화면에는 안 보임) ── */
+  function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  /* “기호 ₙΠᵣ로 나타내며”처럼 기호 이름을 말할 때는 뜻풀이 대신 “n 파이 r”로 읽음 */
+  var SYM = { C: '씨', P: '피', 'Π': '파이', H: '에이치' };
+  var reSym = new RegExp('기호 ([' + SUBC + ']+)([CPΠH])([' + SUBC + ']+)', 'g');
+  function subsup(s) {
+    return String(s)
+      .replace(reSym, function (m, a, k, b) { return '기호 <span aria-hidden="true"><sub>' + mapCh(a, SUBC, SUBN) + '</sub>' + k + '<sub>' + mapCh(b, SUBC, SUBN) + '</sub></span><span class="sr">' + mapCh(a, SUBC, SUBN) + ' ' + SYM[k] + ' ' + mapCh(b, SUBC, SUBN) + '</span>'; })
+      .replace(reComb, function (m, a, k, b) { return '<span aria-hidden="true"><sub>' + mapCh(a, SUBC, SUBN) + '</sub>' + k + '<sub>' + mapCh(b, SUBC, SUBN) + '</sub></span><span class="sr">' + combRead(a, k, b) + '</span>'; })
+      .replace(/([A-Za-z])([̂̄])/g, function (m, a, k) { return '<span aria-hidden="true">' + m + '</span><span class="sr">' + a + (k === HAT ? ' 햇' : ' 바') + '</span>'; })
+      .replace(reSup, function (m) { var t = mapCh(m, SUPC, SUPN); return '<sup aria-hidden="true">' + t + '</sup><span class="sr">' + power(t) + '</span>'; })
+      .replace(reSub, function (m) { var t = mapCh(m, SUBC, SUBN); return '<sub aria-hidden="true">' + t + '</sub><span class="sr"> ' + t + '</span>'; });
+  }
+  function fracHtml(n, d) {
+    var vis = function (t) { return subsup(t).replace(/<span class="sr">[^<]*<\/span>/g, ''); };
+    return '<span class="frac" aria-hidden="true"><span class="fn">' + vis(n) + '</span><span class="fd">' + vis(d) + '</span></span><span class="sr">' + esc(read(n + '/' + d)).trim() + '</span>';
+  }
+  /* 태그는 그대로 두고 글 부분만 바꿈 */
+  function html(s) {
+    return String(s).split(/(<[^>]+>)/).map(function (p) {
+      if (!p || p[0] === '<') return p;
+      return segments(p).map(function (g) { return g.t === 's' ? subsup(g.s) : fracHtml(g.n, g.d); }).join('');
+    }).join('');
+  }
+
+  /* ── SVG: 분수가 있는 글은 조각마다 위치를 계산해 그림 (글자 폭은 어림값) ── */
+  function chW(ch) {
+    if (/[ㄱ-힝]/.test(ch)) return 1.0;
+    if (SUBC.indexOf(ch) >= 0 || SUPC.indexOf(ch) >= 0) return 0.42;
+    if (ch === ' ') return 0.3;
+    if (/[0-9]/.test(ch)) return 0.56;
+    if (/[.,!·:]/.test(ch)) return 0.3;
+    if (/[A-Z]/.test(ch)) return 0.66;
+    return 0.58;
+  }
+  function textW(t, size) { return String(t).split('').reduce(function (a, ch) { return a + chW(ch); }, 0) * size; }
+  var r2 = function (x) { return Math.round(x * 100) / 100; };
+  function svgText(x, y, s, o) {
+    o = o || {}; var size = o.size || 12, fs = size * 0.78, segs = segments(s), parts = [], W = 0;
+    segs.forEach(function (g) {
+      if (g.t === 's') { var w = textW(g.s, size); parts.push({ g: g, w: w }); W += w; }
+      else { var wf = Math.max(textW(g.n, fs), textW(g.d, fs)) + size * 0.3; parts.push({ g: g, w: wf }); W += wf; }
+    });
+    var x0 = o.anchor === 'start' ? x : o.anchor === 'end' ? x - W : x - W / 2, out = '', fill = o.fill || 'currentColor', wt = o.weight ? ' font-weight="' + o.weight + '"' : '';
+    parts.forEach(function (p) {
+      if (p.g.t === 's') { out += '<text x="' + r2(x0) + '" y="' + r2(y) + '" font-size="' + size + '" text-anchor="start" fill="' + fill + '"' + wt + ' xml:space="preserve">' + p.g.s + '</text>'; }
+      else {
+        var cx = x0 + p.w / 2;
+        out += '<text x="' + r2(cx) + '" y="' + r2(y - size * 0.5) + '" font-size="' + r2(fs) + '" text-anchor="middle" fill="' + fill + '"' + wt + '>' + p.g.n + '</text>';
+        out += '<line x1="' + r2(x0 + size * 0.1) + '" y1="' + r2(y - size * 0.36) + '" x2="' + r2(x0 + p.w - size * 0.1) + '" y2="' + r2(y - size * 0.36) + '" stroke="' + fill + '" stroke-width="' + r2(Math.max(0.8, size * 0.07)) + '"/>';
+        out += '<text x="' + r2(cx) + '" y="' + r2(y + size * 0.36) + '" font-size="' + r2(fs) + '" text-anchor="middle" fill="' + fill + '"' + wt + '>' + p.g.d + '</text>';
+      }
+      x0 += p.w;
+    });
+    return out;
+  }
+
+  return { segments: segments, hasFrac: hasFrac, read: read, html: html, svgText: svgText, SUBC: SUBC, SUBN: SUBN, SUPC: SUPC, SUPN: SUPN };
+})();
+if (typeof module !== 'undefined') module.exports = { MATH: MATH };
 
 /* lessons_1.js — Ⅰ. 경우의 수 (4개 레슨)
    7차: 2022 개정 교육과정에서 원순열이 「확률과 통계」에서 빠져(전문 수학·이산 수학으로 이동) 원순열 레슨을 삭제함 */
@@ -471,7 +620,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
         { t: '3가지가 더 늘어난다 (+3)', ok: false, why: '새로 늘린 칸에도 색을 3가지 중에서 고를 수 있습니다. 이 선택이 기존의 모든 신호마다 따로 붙으므로 더하기가 아니라 곱하기입니다.' },
         { t: '4가지가 더 늘어난다 (+4)', ok: false, why: '4는 칸의 수일 뿐 색의 가짓수가 아닙니다. 늘어나는 것은 “색을 고르는 선택”이므로 3과 관계됩니다.' },
         { t: '2배가 된다', ok: false, why: '색이 2가지일 때의 이야기입니다. 이 문제에서는 새 칸에 3가지 색을 고를 수 있습니다.' },
-        { t: '3배가 된다', ok: true, why: '기존의 신호 하나하나 뒤에 3가지 색 중 하나를 붙일 수 있으므로 3배가 됩니다. 그래서 r칸이면 3×3×…×3(r번)=3ʳ가지입니다.' }
+        { t: '3배가 된다', ok: true, why: '기존의 신호 하나하나 뒤에 3가지 색 중 하나를 붙일 수 있으므로 3배가 됩니다. 그래서 r칸이면 3×3×⋯×3(r번)=3ʳ가지입니다.' }
       ]
     },
     slider: { label: '칸의 수 r', min: 1, max: 6, step: 1, value: 3, fmt: function (v) { return v + '칸'; } },
@@ -550,7 +699,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
 
   /* ───────── 2. 같은 것이 있는 순열 ───────── */
   LESSONS.push({
-    id: 'dup', unit: UNIT, title: '같은 것이 있는 순열', concept: 'n개 중에서 같은 것이 각각 p개, q개, …, r개씩 있을 때, n개를 일렬로 나열하는 순열의 수는 n!/(p!q!⋯r!)',
+    id: 'dup', unit: UNIT, title: '같은 것이 있는 순열', concept: 'n개 중에서 같은 것이 각각 p개, q개, …, r개씩 있을 때, n개를 일렬로 나열하는 순열의 수는 n!/(p!q!⋯r!) (단, p+q+⋯+r=n)',
     source: 'Ⅰ. 경우의 수 › 순열과 조합 › 같은 것이 있는 순열',
     terms: [['같은 것이 있는 순열', 'n개 중에서 같은 것이 각각 p개, q개, …, r개씩 있을 때, n개를 일렬로 나열하는 순열. 그 수는 n!/(p!q!⋯r!) (단, p+q+⋯+r=n)']],
     situation: '구슬 5개를 일렬로 놓습니다. 그중 <b>k개는 똑같은 빨간 구슬</b>이고, 나머지는 서로 다른 색입니다. 빨간 구슬끼리 자리를 바꿔도 보기에는 달라지지 않습니다.',
@@ -565,7 +714,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
     },
     slider: { label: '빨간 구슬의 수 k', min: 1, max: 5, step: 1, value: 3, fmt: function (v) { return v + '개'; } },
     calc: function (k) {
-      return [['모두 다르다고 볼 때 5!', '120가지'], ['빨간 구슬끼리 바꾸는 k!', fact(k) + '가지씩 겹침'], ['서로 다른 배열 5! ÷ k!', 120 / fact(k) + '가지', 1]];
+      return [['모두 다르다고 볼 때 5!', '120가지'], ['빨간 구슬끼리 바꾸는 k!', fact(k) + '가지씩 겹침'], ['서로 다른 배열 5!/k! (단, 빨간 구슬 k개 외에는 모두 다름)', 120 / fact(k) + '가지', 1]];
     },
     svgAlt: '빨간 구슬 k개와 다른 색 구슬이 일렬로 놓인 그림과 계산식',
     svg: function (k) {
@@ -639,7 +788,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
     },
     slider: { label: '고르는 개수 r', min: 1, max: 6, step: 1, value: 3, fmt: function (v) { return v + '개'; } },
     calc: function (r) {
-      return [['공 r개 + 칸막이 2개를 놓는 칸', (r + 2) + '칸'], ['칸막이 자리 고르기 ₍r+2₎C₂', nCr(r + 2, 2) + '가지'], ['중복조합의 수 ₃Hᵣ = ₍₃₊ᵣ₋₁₎Cᵣ', '₃H' + sub(r) + ' = ' + sub(r + 2) + 'C' + sub(r) + ' = ' + nHr(3, r) + '가지', 1]];
+      return [['공 r개 + 칸막이 2개를 놓는 칸', (r + 2) + '칸'], ['칸막이 자리 고르기 ᵣ₊₂C₂', nCr(r + 2, 2) + '가지'], ['중복조합의 수 ₃Hᵣ = ₃₊ᵣ₋₁Cᵣ', '₃H' + sub(r) + ' = ' + sub(r + 2) + 'C' + sub(r) + ' = ' + nHr(3, r) + '가지', 1]];
     },
     svgAlt: '공과 칸막이를 일렬로 놓는 그림과 중복조합 계산식',
     svg: function (r) {
@@ -706,7 +855,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
 
   /* ───────── 4. 이항정리 ───────── */
   LESSONS.push({
-    id: 'binom', unit: UNIT, title: '이항정리와 파스칼의 삼각형', concept: '(a+b)ⁿ의 전개식의 계수는 조합의 수 ₙCᵣ',
+    id: 'binom', unit: UNIT, title: '이항정리와 파스칼의 삼각형', concept: '(a+b)ⁿ의 전개식에서 aⁿ⁻ʳbʳ 항의 계수는 ₙCᵣ (r=0, 1, 2, ⋯, n)',
     source: 'Ⅰ. 경우의 수 › 이항정리',
     terms: [['이항정리', '(a+b)ⁿ = ₙC₀aⁿ + ₙC₁aⁿ⁻¹b + ⋯ + ₙCᵣaⁿ⁻ʳbʳ + ⋯ + ₙCₙbⁿ'], ['이항계수', '이항정리의 전개식에서 각 항의 계수 ₙC₀, ₙC₁, …, ₙCₙ'], ['일반항', '전개식의 각 항 ₙCᵣaⁿ⁻ʳbʳ'], ['파스칼의 삼각형', '이항계수를 삼각형 모양으로 배열한 것. ₙ₋₁Cᵣ₋₁ + ₙ₋₁Cᵣ = ₙCᵣ']],
     situation: '(a+b)⁵ = (a+b)(a+b)(a+b)(a+b)(a+b)를 전개합니다. 다섯 개의 괄호에서 <b>a 또는 b 중 하나씩</b> 골라 곱한 것을 모두 더하는 일입니다.',
@@ -722,7 +871,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
     slider: { label: '지수 n', min: 1, max: 8, step: 1, value: 5, fmt: function (v) { return 'n = ' + v; } },
     calc: function (n) {
       var row = [], i; for (i = 0; i <= n; i++) row.push(nCr(n, i));
-      return [['이항정리', '(a+b)' + sup(n) + ' = Σ ₙCᵣ aⁿ⁻ʳbʳ'], ['이항계수 ₙC₀ ~ ₙCₙ', row.join(', ')], ['계수의 합 = 2ⁿ', row.reduce(function (a, b) { return a + b; }, 0) + ' = 2' + sup(n), 1]];
+      return [['이항정리', '(a+b)' + sup(n) + ' = ' + sub(n) + 'C₀a' + sup(n) + ' + ' + sub(n) + 'C₁a' + sup(n - 1) + 'b + ⋯ + ' + sub(n) + 'C' + sub(n) + 'b' + sup(n)], ['이항계수 ₙC₀ ~ ₙCₙ', row.join(', ')], ['계수의 합 = 2ⁿ', row.reduce(function (a, b) { return a + b; }, 0) + ' = 2' + sup(n), 1]];
     },
     svgAlt: '파스칼의 삼각형과 n번째 줄 강조 표시',
     svg: function (n) {
@@ -919,7 +1068,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
       q: '뽑힌 학생이 독서 또는 봉사 프로그램에 참여했을 확률 P(A∪B)는 얼마일까요?',
       options: [
         { t: '0.65 + 0.5 = 1.15', ok: false, why: '확률은 1을 넘을 수 없습니다. 두 프로그램에 모두 참여한 학생을 두 번 센 결과입니다.' },
-        { t: '0.65 × 0.5 = 0.325', ok: false, why: '곱은 서로 영향을 주지 않는 두 사건이 “동시에” 일어날 확률을 구할 때 쓰는 계산입니다. “또는”의 확률에는 맞지 않습니다.' },
+        { t: '0.65 × 0.5 = 0.325', ok: false, why: '곱 P(A)P(B)는 두 사건이 서로 독립일 때 “동시에” 일어날 확률 P(A∩B)를 구하는 계산입니다. “또는”의 확률에는 맞지 않습니다.' },
         { t: '0.65 (큰 쪽의 확률)', ok: false, why: 'B에만 참여한 학생(A에 속하지 않는 학생)이 있을 수 있으므로 P(A∪B)는 P(A)보다 같거나 큽니다. 큰 쪽만 취하면 B에만 참여한 학생이 빠집니다.' },
         { t: '겹치는 학생 수를 알아야 정해진다 (0.65 + 0.5 − P(A∩B))', ok: true, why: 'n(A∪B)=n(A)+n(B)−n(A∩B)입니다. 겹치는 학생 수에 따라 값이 달라지므로, 슬라이더로 겹침을 바꾸며 확인해 보세요.' }
       ]
@@ -929,7 +1078,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
       var u = 115 - x;
       return [['n(A) + n(B)', '65 + 50 = 115명'], ['겹친 학생 n(A∩B)', x + '명'], ['n(A∪B) = n(A)+n(B)−n(A∩B)', u + '명'], ['P(A∪B) = ' + u + '/100', fx(u / 100, 2), 1]];
     },
-    svgAlt: '학생 100명을 칸으로 나타낸 그림. 수학만, 과학만, 둘 다, 둘 다 아닌 학생이 색으로 구분됨',
+    svgAlt: '학생 100명을 칸으로 나타낸 그림. 독서 프로그램만, 봉사 프로그램만, 둘 다, 둘 다 아닌 학생이 색으로 구분됨',
     svg: function (x) {
       var cls = vennCls(x), s = '';
       for (var i = 0; i < 100; i++) s += r_(30 + (i % 10) * 17, 24 + Math.floor(i / 10) * 17, 15, 15, VCOL[cls[i]], { rx: 3 });
@@ -974,7 +1123,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
     id: 'comp', unit: UNIT, title: '여사건의 확률', concept: 'P(Aᶜ) = 1 − P(A) 로 “적어도 하나”의 확률 구하기',
     source: 'Ⅱ. 확률 › 확률의 개념과 활용 › 여사건의 확률',
     terms: [['여사건 Aᶜ', '사건 A가 일어나지 않는 사건'], ['여사건의 확률', 'P(Aᶜ) = 1 − P(A)'], ['적어도 하나', '“하나 이상”이라는 뜻. 여사건(하나도 없다)의 확률을 이용하면 편하다']],
-    situation: '반 학생 k명 중에 <b>생일이 같은 학생이 있을 확률</b>을 구합니다. 1년은 365일로 보고, 태어난 날은 모두 같은 가능성이라고 가정합니다.',
+    situation: '반 학생 k명 중에 <b>생일이 같은 학생이 있을 확률</b>을 구합니다(사건 A: 생일이 같은 두 학생이 적어도 한 쌍 있다). 1년은 365일로 보고, 태어난 날은 모두 같은 가능성이라고 가정합니다.',
     predict: {
       q: '학생이 30명일 때, 생일이 같은 두 학생이 적어도 한 쌍 있을 확률은 얼마쯤일까요?',
       options: [
@@ -988,7 +1137,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
     needsSeed: true,
     calc: function (k) {
       var nm = noMatch(k);
-      return [['전체 경우의 수 365ᵏ', '365' + String(k).split('').map(function (d) { return '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d]; }).join('')], ['모두 다른 경우 P(Aᶜ) = ₃₆₅Pₖ ÷ 365ᵏ', fx(nm, 4)], ['생일이 같은 학생이 있을 확률 P(A) = 1 − P(Aᶜ)', fx(1 - nm, 4), 1]];
+      return [['전체 경우의 수 365ᵏ', '365' + String(k).split('').map(function (d) { return '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d]; }).join('')], ['모두 다른 경우 P(Aᶜ) = ₃₆₅Pₖ/365ᵏ', fx(nm, 4)], ['생일이 같은 학생이 있을 확률 P(A) = 1 − P(Aᶜ)', fx(1 - nm, 4), 1]];
     },
     svgAlt: '학생 수에 따라 생일이 같은 학생이 있을 확률이 커지는 곡선',
     svg: function (k) {
@@ -1046,10 +1195,10 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
 
   /* ───────── 8. 조건부확률 ───────── */
   LESSONS.push({
-    id: 'cond', unit: UNIT, title: '조건부확률', concept: 'P(B|A) = P(A∩B) ÷ P(A)',
+    id: 'cond', unit: UNIT, title: '조건부확률', concept: 'P(B|A) = P(A∩B)/P(A) (단, P(A)>0)',
     source: 'Ⅱ. 확률 › 조건부확률 › 조건부확률',
     terms: [['조건부확률 P(B|A)', '사건 A가 일어났을 때 사건 B가 일어날 확률. P(B|A) = P(A∩B)/P(A) (단, P(A)>0)'], ['확률의 곱셈정리', 'P(A∩B) = P(A)P(B|A) (단, P(A)>0)'], ['비복원추출', '꺼낸 것을 다시 넣지 않고 다음 것을 꺼내는 추출']],
-    situation: '주머니에 <b>빨간 공 r개와 파란 공 5개</b>가 들어 있습니다. 공을 한 개씩 차례로 꺼내고, 꺼낸 공은 다시 넣지 않습니다. 첫 번째로 빨간 공을 꺼냈다는 것을 알고 있습니다.',
+    situation: '주머니에 <b>빨간 공 r개와 파란 공 5개</b>가 들어 있습니다. 공을 한 개씩 차례로 꺼내고, 꺼낸 공은 다시 넣지 않습니다. 첫 번째로 빨간 공을 꺼냈다는 것을 알고 있습니다. (사건 A: 첫 번째에 빨간 공, 사건 B: 두 번째에 빨간 공)',
     predict: {
       q: '빨간 공이 3개(r=3)일 때, 첫 번째에 빨간 공이 나온 것을 알고 있다면 두 번째도 빨간 공일 확률은 얼마일까요?',
       options: [
@@ -1062,7 +1211,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
     slider: { label: '빨간 공의 수 r', min: 1, max: 8, step: 1, value: 3, fmt: function (v) { return v + '개'; } },
     calc: function (r) {
       var T = r + 5, pa = MX.frac(r, T), pab = MX.frac(r * (r - 1), T * (T - 1)), pba = (r - 1) + '/' + (T - 1);
-      return [['전체 공 r + 5', T + '개'], ['P(A) = r/(r+5) (첫째가 빨강)', pa], ['P(A∩B) (둘 다 빨강)', pab], ['P(B|A) = P(A∩B) ÷ P(A) = (r−1)/(r+4)', pba + ' ≈ ' + fx((r - 1) / (T - 1), 4), 1]];
+      return [['전체 공 r + 5', T + '개'], ['P(A) = r/(r+5) (첫째가 빨강)', pa], ['P(A∩B) (둘 다 빨강)', pab], ['P(B|A) = P(A∩B)/P(A) = (r−1)/(r+4)', pba + ' ≈ ' + fx((r - 1) / (T - 1), 4), 1]];
     },
     svgAlt: '첫째와 둘째 공을 꺼낼 때의 확률을 나타낸 수형도',
     svg: function (r) {
@@ -1084,7 +1233,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
         { t: '16/81', ok: false, why: '(4/9)×(4/9)입니다. 꺼낸 공을 다시 넣는 경우(복원추출)의 계산이며, 이 문제는 다시 넣지 않습니다.' },
         { t: '4/9', ok: false, why: '첫 번째가 검은 공일 확률 P(A)만 구한 값입니다. 두 번째도 검은 공이어야 하므로 P(B|A)를 곱해야 합니다.' },
         { t: '3/8', ok: false, why: '첫째가 검은 공일 때 둘째도 검은 공일 조건부확률 P(B|A)만 구한 값입니다. 첫째가 검은 공일 확률 4/9도 곱해야 합니다.' },
-        { t: '1/6', ok: true, why: '곱셈정리 P(A∩B)=P(A)·P(B|A)=4/9×3/8=12/72=1/6입니다.' }
+        { t: '1/6', ok: true, why: '사건 A를 “첫째가 검은 공”, 사건 B를 “둘째가 검은 공”이라 하면, 곱셈정리 P(A∩B)=P(A)P(B|A)=4/9×3/8=12/72=1/6입니다.' }
       ]
     },
     build3d: function (X) {
@@ -1129,7 +1278,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
   LESSONS.push({
     id: 'indep', unit: UNIT, title: '독립시행의 확률', concept: '한 번에 사건 A가 일어날 확률이 p일 때, n번의 독립시행에서 A가 r번 일어날 확률은 ₙCᵣ pʳ (1−p)ⁿ⁻ʳ',
     source: 'Ⅱ. 확률 › 조건부확률 › 사건의 독립과 종속 (독립시행의 확률)',
-    terms: [['독립', '두 사건 A, B에서 한 사건이 일어나는 것이 다른 사건이 일어날 확률에 영향을 주지 않을 때. P(B|A) = P(B)'], ['종속', '두 사건 A, B가 서로 독립이 아닐 때'], ['독립시행', '동전이나 주사위를 반복하여 던지는 것처럼, 같은 시행을 반복할 때 각 시행의 결과가 다른 시행의 결과에 영향을 주지 않는 시행']],
+    terms: [['독립', '두 사건 A, B에서 한 사건이 일어나는 것이 다른 사건이 일어날 확률에 영향을 주지 않을 때. P(B|A) = P(B), 곧 P(A∩B) = P(A)P(B) (단, P(A)>0)'], ['종속', '두 사건 A, B가 서로 독립이 아닐 때'], ['독립시행', '동전이나 주사위를 반복하여 던지는 것처럼, 같은 시행을 반복할 때 각 시행의 결과가 다른 시행의 결과에 영향을 주지 않는 시행']],
     situation: '양궁 선수가 화살 한 발을 쏘아 10점에 맞힐 확률이 <b>1/4</b>이라고 합니다(가상의 값). 매번 앞의 결과와 상관없이 쏘는 독립시행으로 보고, <b>6발</b> 쏩니다.',
     predict: {
       q: '6발을 쏠 때, 10점에 맞힌 횟수 중 확률이 가장 큰 것은 몇 번일까요?',
@@ -1211,9 +1360,9 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
     return { E: E, E2: E2, V: V, s: Math.sqrt(V), simple: (3 + a) / 3 };
   }
   LESSONS.push({
-    id: 'expect', unit: UNIT, title: '이산확률변수의 기댓값', concept: 'E(X) = x₁p₁ + x₂p₂ + … + xₙpₙ',
+    id: 'expect', unit: UNIT, title: '이산확률변수의 기댓값', concept: 'E(X) = x₁p₁ + x₂p₂ + ⋯ + xₙpₙ',
     source: 'Ⅲ. 통계 › 확률분포 › 이산확률변수의 기댓값과 표준편차',
-    terms: [['확률변수 X', '어떤 시행에서 표본공간의 각 원소에 하나의 실수를 대응시키는 것'], ['이산확률변수', '확률변수 X가 가질 수 있는 값이 유한개이거나, 자연수와 같이 셀 수 있을 때'], ['기댓값(평균) E(X)', 'E(X) = x₁p₁ + x₂p₂ + ⋯ + xₙpₙ. 확률변수 X의 평균이라고도 한다'], ['분산 V(X)·표준편차 σ(X)', 'V(X) = E((X−m)²) = E(X²) − {E(X)}², σ(X) = √V(X)']],
+    terms: [['확률변수 X', '어떤 시행에서 표본공간의 각 원소에 하나의 실수를 대응시키는 것'], ['이산확률변수', '확률변수 X가 가질 수 있는 값이 유한개이거나, 자연수와 같이 셀 수 있을 때'], ['기댓값(평균) E(X)', 'E(X) = x₁p₁ + x₂p₂ + ⋯ + xₙpₙ. 확률변수 X의 평균이라고도 한다'], ['분산 V(X)·표준편차 σ(X)', 'V(X) = E((X−m)²) = E(X²) − {E(X)}² (단, m=E(X)), σ(X) = √V(X)']],
     situation: '뽑기 게임에서 점수 X가 <b>1점(확률 1/2), 2점(확률 1/3), a점(확률 1/6)</b>으로 나옵니다(가상의 게임). 게임을 아주 많이 되풀이했을 때 한 번당 평균 점수는 얼마일까요?',
     predict: {
       q: 'a=10일 때 한 번당 평균 점수 E(X)는 얼마일까요?',
@@ -1227,7 +1376,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
     slider: { label: '가장 높은 점수 a', min: 3, max: 15, step: 1, value: 10, fmt: function (v) { return v + '점'; } },
     calc: function (a) {
       var s = stats11(a);
-      return [['E(X) = 1·½ + 2·⅓ + a·⅙', MX.frac(7 + a, 6) + ' ≈ ' + fx(s.E, 3), 1], ['(참고) 확률을 무시한 단순 평균', fx(s.simple, 3)], ['E(X²) = 1²·½ + 2²·⅓ + a²·⅙', MX.frac(11 + a * a, 6) + ' ≈ ' + fx(s.E2, 3)], ['V(X) = E(X²) − {E(X)}²', MX.frac(5 * a * a - 14 * a + 17, 36) + ' ≈ ' + fx(s.V, 3)], ['표준편차 σ(X) = √V(X)', fx(s.s, 3)]];
+      return [['E(X) = 1×1/2 + 2×1/3 + a×1/6', MX.frac(7 + a, 6) + ' ≈ ' + fx(s.E, 3), 1], ['(참고) 확률을 무시한 단순 평균', fx(s.simple, 3)], ['E(X²) = 1²×1/2 + 2²×1/3 + a²×1/6', MX.frac(11 + a * a, 6) + ' ≈ ' + fx(s.E2, 3)], ['V(X) = E(X²) − {E(X)}²', MX.frac(5 * a * a - 14 * a + 17, 36) + ' ≈ ' + fx(s.V, 3)], ['표준편차 σ(X) = √V(X)', fx(s.s, 3)]];
     },
     svgAlt: '점수 1, 2, a의 확률 막대와 평균 위치를 나타낸 수직선',
     svg: function (a) {
@@ -1285,9 +1434,9 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
 
   /* ───────── 11. 이항분포 ───────── */
   LESSONS.push({
-    id: 'bin', unit: UNIT, title: '이항분포', concept: 'X ~ B(n, p)이면 E(X)=np, V(X)=np(1−p)',
+    id: 'bin', unit: UNIT, title: '이항분포', concept: '확률변수 X가 이항분포 B(n, p)를 따르면 E(X)=np, V(X)=npq, σ(X)=√(npq) (단, q=1−p)',
     source: 'Ⅲ. 통계 › 확률분포 › 이항분포',
-    terms: [['이항분포 B(n, p)', '한 번의 시행에서 사건 A가 일어날 확률이 p일 때, n번의 독립시행에서 사건 A가 일어나는 횟수 X의 확률분포. P(X=r) = ₙCᵣ pʳ qⁿ⁻ʳ (q=1−p)'], ['평균 E(X)', 'E(X) = np'], ['분산 V(X)', 'V(X) = npq (단, q=1−p), 표준편차 σ(X) = √(npq)'], ['큰 수의 법칙', '사건 A가 일어날 확률이 p일 때, 시행 횟수 n을 크게 할수록 상대도수 X/n이 p에 가까울 확률이 1에 가까워진다']],
+    terms: [['이항분포 B(n, p)', '한 번의 시행에서 사건 A가 일어날 확률이 p일 때, n번의 독립시행에서 사건 A가 일어나는 횟수 X의 확률분포. P(X=r) = ₙCᵣ pʳ qⁿ⁻ʳ (q=1−p)'], ['평균 E(X)', 'E(X) = np'], ['분산 V(X)', 'V(X) = npq (단, q=1−p), 표준편차 σ(X) = √(npq)'], ['큰 수의 법칙', '확률변수 X가 이항분포 B(n, p)를 따를 때, 아무리 작은 양수 h를 정해도 n을 충분히 크게 하면 P(|X/n − p| < h)가 1에 가까워진다']],
     situation: '갈톤 보드(못 판)에서 구슬이 못에 부딪힐 때마다 <b>오른쪽으로 갈 확률이 p</b>, 왼쪽은 1−p입니다. 못 10단을 지나 오른쪽으로 간 횟수 X(0~10)에 해당하는 칸에 구슬이 모입니다. 즉 X는 이항분포 B(10, p)를 따릅니다.',
     predict: {
       q: '오른쪽으로 갈 확률이 p=0.7일 때, 구슬이 가장 많이 모이는 칸은 어디일까요? (칸 번호는 오른쪽으로 간 횟수 0~10)',
@@ -1407,7 +1556,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
     slider: { label: '표준편차 σ', min: 5, max: 15, step: 1, value: 5, fmt: function (v) { return 'σ = ' + v + '점'; } },
     calc: function (s) {
       var z = 10 / s;
-      return [['정규분포', 'N(60, ' + s + '²)'], ['곡선의 최고 높이 f(m) = 1/(σ√2π)', fx(MX.pdf(60, 60, s), 4)], ['곡선과 x축 사이의 전체 넓이', '1 (σ에 관계없이)', 1], ['P(m−σ ≤ X ≤ m+σ)', fx(Phi(1) - Phi(-1), 4)], ['P(m−2σ ≤ X ≤ m+2σ)', fx(Phi(2) - Phi(-2), 4)], ['P(X ≥ 70) = P(Z ≥ ' + fx(z, 2) + ')', fx(1 - Phi(z), 4)]];
+      return [['정규분포', 'N(60, ' + s + '²)'], ['곡선의 최고 높이 f(m) = 1/(σ√(2π))', fx(MX.pdf(60, 60, s), 4)], ['곡선과 x축 사이의 전체 넓이', '1 (σ에 관계없이)', 1], ['P(m−σ ≤ X ≤ m+σ)', fx(Phi(1) - Phi(-1), 4)], ['P(m−2σ ≤ X ≤ m+2σ)', fx(Phi(2) - Phi(-2), 4)], ['P(X ≥ 70) = P(Z ≥ ' + fx(z, 2) + ')', fx(1 - Phi(z), 4)]];
     },
     svgAlt: '평균 60, 표준편차 σ인 정규분포 곡선과 ±1σ, ±2σ, ±3σ 구간',
     svg: function (s) {
@@ -1480,10 +1629,10 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
   }
   var SIG14 = Math.sqrt(35 / 12);
   LESSONS.push({
-    id: 'xbar', unit: UNIT, title: '표본평균의 분포', concept: 'E(X̄)=m, σ(X̄)=σ/√n',
+    id: 'xbar', unit: UNIT, title: '표본평균의 분포', concept: '모평균 m, 모표준편차 σ인 모집단에서 크기 n인 표본을 임의추출할 때 E(X̄)=m, V(X̄)=σ²/n, σ(X̄)=σ/√n',
     source: 'Ⅲ. 통계 › 통계적 추정 › 모집단과 표본 (표본평균의 분포)',
     terms: [['모집단', '통계 조사에서 조사의 대상이 되는 집단 전체'], ['표본', '조사하기 위하여 모집단에서 뽑은 일부분'], ['임의추출', '모집단에 속하는 각 대상이 같은 확률로 추출되도록 하는 방법'], ['표본평균 X̄', '모집단에서 임의추출한 크기가 n인 표본의 평균. 표본에 따라 달라지는 확률변수이며 E(X̄)=m, σ(X̄)=σ/√n'], ['전수조사·표본조사', '모집단 전체를 조사하는 것이 전수조사, 모집단의 일부(표본)를 뽑아 조사하는 것이 표본조사']],
-    situation: '공정한 주사위를 한 번 던져 나온 눈이 모집단의 값입니다(모평균 m=3.5, 모표준편차 σ=√(35/12)≈1.708). 주사위를 <b>n번 던져 눈의 평균(표본평균 X̄)</b>을 구하는 일을 2000번 되풀이하면, X̄의 값들은 어떤 모양으로 흩어질까요?',
+    situation: '공정한 주사위를 한 번 던져 나온 눈이 모집단의 값입니다(모평균 m=3.5, 모표준편차 σ=√(35/12)≈1.708). 주사위를 <b>n번 던져 눈의 평균(표본평균 X̄)</b>을 구하는 일을 2000번 되풀이하면, X̄의 값들은 어떤 모양으로 흩어질까요? (주황 곡선은 비교용 정규근사입니다.)',
     predict: {
       q: '던지는 횟수(표본의 크기)를 n=1에서 n=25로 늘리면, 표본평균 X̄의 값들이 흩어진 정도(표준편차)는 어떻게 될까요?',
       options: [
@@ -1499,20 +1648,22 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
       var s = sim14(env.seed, n);
       return [['모평균 m / 모표준편차 σ', '3.5 / ' + fx(SIG14, 3)], ['E(X̄) = m', '3.5'], ['σ(X̄) = σ/√n', fx(SIG14 / Math.sqrt(n), 3), 1], ['모의실험(2000번)의 X̄ 평균', fx(s.mean, 3)], ['모의실험(2000번)의 X̄ 표준편차', fx(s.sd, 3)]];
     },
-    svgAlt: '주사위 n번 평균의 모의실험 히스토그램과 정규분포 곡선',
+    svgAlt: '주사위 n번 평균의 모의실험 히스토그램과 비교용 정규근사 곡선',
     svg: function (n, env) {
       var s = sim14(env.seed, n), out = '', base = 178, X = function (x) { return 30 + (x - 0.875) / 5.25 * 360; }, scale = 150, i;
       for (i = 0; i <= 20; i++) { var dens = s.bins[i] / (s.T * 0.25), h = dens * scale; out += r_(X(1 + i * 0.25 - 0.125), base - h, 360 / 21 - 1, h, '#4f8fdc'); }
       var pts = [], sd = SIG14 / Math.sqrt(n); for (i = 0; i <= 120; i++) { var x = 0.875 + 5.25 * i / 120; pts.push(X(x) + ',' + (base - MX.pdf(x, 3.5, sd) * scale)); }
-      out += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + COL.amber + '" stroke-width="2.5"/>';
+      /* 8차: 주황 곡선은 X̄의 정확한 분포가 아니라 비교용 정규근사. n이 작으면 점선으로 흐리게 */
+      out += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + COL.amber + '" stroke-width="2.5"' + (n < 5 ? ' stroke-dasharray="6 4" opacity="0.6"' : '') + '/>';
+      if (n < 5) out += t(390, 36, 'n이 작아 X̄는 띄엄띄엄한 값만 가짐 — 곡선은 비교용', { anchor: 'end', size: 10, fill: COL.amber });
       out += l(26, base, 394, base);
       for (i = 1; i <= 6; i++) out += t(X(i), base + 15, i, { size: 10 });
-      out += t(210, 16, 'n = ' + n + ' · 표본평균 X̄의 분포 (주황: N(3.5, σ²/n))', { size: 11, weight: 700 });
+      out += t(210, 16, 'n = ' + n + ' · 표본평균 X̄의 분포 (주황: 비교용 정규근사 N(3.5, σ²/n))', { size: 11, weight: 700 });
       return out;
     },
-    omitted: '2000번의 모의실험은 표본평균의 분포를 근사한 것입니다(같은 시작값이면 같은 결과). 주사위는 공정하고 던질 때마다 서로 영향을 주지 않는 것으로 가정합니다. 막대의 넓이는 상대도수에 맞춰 그렸습니다(높이=밀도).',
+    omitted: '주황 곡선 N(3.5, σ²/n)은 X̄의 정확한 분포가 아니라 비교용 정규근사입니다. 주사위 눈의 평균 X̄는 띄엄띄엄한 값(n=1이면 1~6)만 가지는 이산확률변수이며, n이 커질수록 막대 모양이 곡선에 가까워집니다. 2000번의 모의실험은 표본평균의 분포를 근사한 것입니다(같은 시작값이면 같은 결과). 주사위는 공정하고 던질 때마다 서로 영향을 주지 않는 것으로 가정합니다. 막대의 넓이는 상대도수에 맞춰 그렸습니다(높이=밀도).',
     actions: [{ label: '2000번 다시 해 보기', seedStep: true }],
-    legend: [['#4f8fdc', '모의실험 X̄의 분포'], [COL.amber, '이론 곡선 N(3.5, σ²/n)'], [COL.gray, '모집단(주사위 한 번)']],
+    legend: [['#4f8fdc', '모의실험 X̄의 분포'], [COL.amber, '비교용 정규근사 곡선 N(3.5, σ²/n)'], [COL.gray, '모집단(주사위 한 번)']],
     apply: {
       q: '모집단이 정규분포 N(80, 12²)을 따른다. 크기가 36인 표본을 임의추출할 때, 표본평균 X̄가 84 이상일 확률은 얼마일까요? (P(0≤Z≤1)=0.3413, P(0≤Z≤2)=0.4772)',
       options: [
@@ -1524,7 +1675,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
     },
     build3d: function (X) {
       var T = X.T, H = X.H, g = X.g, bars = [], cur = [], tgt = [], SC = 3.2;
-      /* 뒤: X̄의 분포(빛나는 파랑 막대 + 주황 이론 곡선), 앞: 모집단(주사위 한 번 — 1~6이 똑같이 1/6)의 낮은 블록.
+      /* 뒤: X̄의 분포(빛나는 파랑 막대 + 주황 비교용 정규근사 곡선), 앞: 모집단(주사위 한 번 — 1~6이 똑같이 1/6)의 낮은 블록.
          2차는 모집단 블록이 막대 뒤에 있어 가려지고 섞여 보였음 */
       var floor = H.box(11.5, 0.1, 1.6, '#e9e4d8'); floor.position.set(0, -0.05, 0); g.add(floor);
       for (var i = 0; i < 21; i++) { var b = H.box(0.46, 1, 0.8, '#4f8fdc'); b.position.set((i - 10) * 0.52, 0.5, 0); g.add(b); bars.push(b); cur.push(0); tgt.push(0); }
@@ -1534,7 +1685,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
         var pb = H.box(1.2, 0.45, 0.9, '#b8b4ac'); pb.position.set(((k - 1) * 4 - 10) * 0.52, 0.225, 2.4); g.add(pb);
       }
       var pl = H.label('모집단: 주사위 한 번(1~6 각 1/6)', { size: 0.7 }); pl.position.set(0, 1.5, 3.2); g.add(pl);
-      var curve = new T.Line(new T.BufferGeometry(), new T.LineBasicMaterial({ color: COL.amber })); g.add(curve);
+      var curve = new T.Line(new T.BufferGeometry(), new T.LineBasicMaterial({ color: COL.amber, transparent: true })); g.add(curve);
       return {
         cam: { theta: 0.3, phi: 1.2, r: 15, t: [0, 1.3, -0.5], bookPhi: 0.9 },
         update: function (n, env) {
@@ -1542,7 +1693,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
           for (i = 0; i <= 20; i++) tgt[i] = s.bins[i] / (s.T * 0.25) * SC;
           var sd = SIG14 / Math.sqrt(n);
           for (i = 0; i <= 120; i++) { var x = 0.875 + 5.25 * i / 120; pts.push(new T.Vector3((x - 3.5) / 0.25 * 0.52, MX.pdf(x, 3.5, sd) * SC + 0.05, 0.5)); }
-          curve.geometry.setFromPoints(pts);
+          curve.geometry.setFromPoints(pts); curve.material.opacity = n < 5 ? 0.35 : 1;   /* n이 작으면 비교용 곡선을 흐리게 */
         },
         tick: function (time, dt) {
           var k = dt > 0 ? 1 - Math.exp(-dt * 6) : 1;
@@ -1555,7 +1706,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
   /* ───────── 14. 모평균의 추정 ───────── */
   function z15(seed) { var R = MX.rng(seed * 53 + 11), a = []; for (var i = 0; i < 100; i++) a.push(MX.normal(R)); return a; }
   LESSONS.push({
-    id: 'ci', unit: UNIT, title: '모평균의 추정과 신뢰구간', concept: '신뢰도 95%: x̄ − 1.96·σ/√n ≤ m ≤ x̄ + 1.96·σ/√n',
+    id: 'ci', unit: UNIT, title: '모평균의 추정과 신뢰구간', concept: '모집단이 정규분포이고 모표준편차 σ를 알 때, 모평균 m의 신뢰도 95% 신뢰구간: x̄ − 1.96·σ/√n ≤ m ≤ x̄ + 1.96·σ/√n',
     source: 'Ⅲ. 통계 › 통계적 추정 › 모평균의 추정',
     terms: [['모평균 m', '모집단의 평균. 보통 알 수 없어서 표본을 이용하여 추정한다'], ['추정', '표본에서 얻은 정보를 이용하여 모평균과 같은 모집단의 특성을 추측하는 것'], ['신뢰구간', '모평균 m에 대한 신뢰도 95%의 신뢰구간: x̄ − 1.96·σ/√n ≤ m ≤ x̄ + 1.96·σ/√n'], ['신뢰도 95%', '크기가 n인 표본을 여러 번 임의추출하여 신뢰구간을 만들면, 그중 약 95%가 모평균 m을 포함한다는 뜻']],
     situation: '모표준편차가 σ=10인 정규분포 모집단에서 크기 n의 표본을 뽑아 표본평균 x̄를 구하고, 모평균 m의 신뢰도 95% 신뢰구간 <b>x̄ ± 1.96·σ/√n</b>을 만듭니다. 이 일을 100번 되풀이한 결과가 3D에 줄지어 있습니다. (실제 모평균은 50이지만, 연구자는 모른다고 가정합니다.)',
@@ -1676,7 +1827,7 @@ var LESSONS = (typeof LESSONS === 'undefined') ? [] : LESSONS;
       options: [
         { t: '0.5992 ≤ p ≤ 0.6008', ok: false, why: '√(p̂q̂/n) 대신 p̂q̂/n=0.24/600=0.0004를 쓴 값입니다. 표준편차에는 제곱근을 씌워야 합니다.' },
         { t: '0.5484 ≤ p ≤ 0.6516', ok: false, why: '신뢰도 99%에 쓰는 2.58을 곱한 값(0.6±2.58×0.02)입니다. 95%에서는 1.96을 씁니다.' },
-        { t: '0.5608 ≤ p ≤ 0.6392', ok: true, why: 'p̂=360/600=0.6, √(p̂q̂/n)=√(0.6×0.4/600)=√0.0004=0.02이므로 0.6−1.96×0.02 ≤ p ≤ 0.6+1.96×0.02, 곧 0.5608 ≤ p ≤ 0.6392입니다.' },
+        { t: '0.5608 ≤ p ≤ 0.6392', ok: true, why: 'p̂=360/600=0.6, √(p̂q̂/n)=√((0.6×0.4)/600)=√0.0004=0.02이므로 0.6−1.96×0.02 ≤ p ≤ 0.6+1.96×0.02, 곧 0.5608 ≤ p ≤ 0.6392입니다.' },
         { t: '0.58 ≤ p ≤ 0.62', ok: false, why: '0.6±0.02, 곧 1.96을 곱하지 않은 값입니다. 신뢰도 95%의 구간은 표준편차의 1.96배만큼 양쪽으로 넓힙니다.' }
       ]
     },
@@ -1795,7 +1946,7 @@ var TEACH = {
   },
   xbar: {
     ask: ['n을 4배로 늘리면 표본평균의 표준편차는 어떻게 되나요?', '모집단이 정규분포가 아니어도 n이 크면 X̄가 종 모양에 가까워지는 모습을 설명해 보세요.'],
-    simplify: '2000번의 모의실험(난수)이며 공정한 주사위, 모집단 크기가 충분히 크다고 가정합니다. 같은 시작값이면 같은 결과입니다. 표본추출은 임의추출만 다룹니다(교육과정).',
+    simplify: '주황 곡선은 X̄의 정확한 분포가 아닌 비교용 정규근사(N(3.5, σ²/n))로, n이 작을 때는 점선으로 흐리게 표시했습니다. 2000번의 모의실험(난수)이며 공정한 주사위, 모집단 크기가 충분히 크다고 가정합니다. 같은 시작값이면 같은 결과입니다. 표본추출은 임의추출만 다룹니다(교육과정).',
     misc: 'σ/√n 대신 σ/n을 씁니다. 표본이 커지면 흩어짐이 커진다고 생각합니다.',
     verify: 'n=1, 4, 9, 25에서 모의실험의 평균과 표준편차가 이론값 3.5와 σ/√n에 오차 범위 안에서 일치했습니다. 적용 문제는 0.5−0.4772=0.0228입니다.',
     data: '교육과정: [12확통03-05] 모집단과 표본, [12확통03-06] 표본평균과 모평균의 관계. 주사위 모집단과 2000번 모의실험은 이 교재가 만든 설정(난수)입니다.'
@@ -1829,15 +1980,15 @@ var KEYS = (function () {
   var num = function (s) { var m = String(s).match(/-?\d+(\.\d+)?/); return m ? m[0] : s; };
   return {
     rep: { f: 'ₙΠᵣ = nʳ', ex: function (d, r) { return '₃Π' + sub(r) + ' = 3' + sup(r) + ' = ' + Math.pow(3, r); } },
-    dup: { f: 'n!/(p!q!⋯r!)  (p+q+⋯+r = n)', ex: function (d, k) { return '5!/' + k + '! = ' + fact(5) / fact(k); } },
+    dup: { f: 'n!/(p!q!⋯r!)  (단, p+q+⋯+r = n)', ex: function (d, k) { return '5!/' + k + '! = ' + fact(5) / fact(k); } },
     comb: { f: 'ₙHᵣ = ₙ₊ᵣ₋₁Cᵣ', ex: function (d, r) { return '₃H' + sub(r) + ' = ' + sub(r + 2) + 'C' + sub(r) + ' = ' + nCr(r + 2, r); } },
     binom: { f: 'ₙC₀ + ₙC₁ + ⋯ + ₙCₙ = 2ⁿ', ex: function (d, n) { return sub(n) + 'C₀ + ' + sub(n) + 'C₁ + ⋯ + ' + sub(n) + 'C' + sub(n) + ' = ' + Math.pow(2, n) + ' = 2' + sup(n); } },
     stat: { f: '상대도수 rₙ/n → 통계적 확률 (n이 충분히 클 때)', ex: function (d, v, env) { return num(val(d, v, env, 1)) + '/' + num(val(d, v, env, 0)) + ' = ' + val(d, v, env, 2); } },
     add: { f: 'P(A∪B) = P(A) + P(B) − P(A∩B)', ex: function (d, v) { return '65/100 + 50/100 − ' + v + '/100 = ' + (115 - v) + '/100'; } },
     comp: { f: 'P(A) = 1 − P(Aᶜ)', ex: function (d, v, env) { return '1 − ' + val(d, v, env, 1) + ' = ' + val(d, v, env, 2); } },
-    cond: { f: 'P(B|A) = P(A∩B)/P(A)', ex: function (d, v, env) { return '(' + val(d, v, env, 2) + ') ÷ (' + val(d, v, env, 1) + ') = ' + val(d, v, env, 3); } },
+    cond: { f: 'P(B|A) = P(A∩B)/P(A)  (단, P(A)>0)', ex: function (d, v, env) { return '(' + val(d, v, env, 2) + ') ÷ (' + val(d, v, env, 1) + ') = ' + val(d, v, env, 3); } },
     indep: { f: 'P(X=r) = ₙCᵣ pʳ qⁿ⁻ʳ  (q = 1−p)', ex: function (d, r, env) { return '₆C' + sub(r) + '(1/4)' + sup(r) + '(3/4)' + sup(6 - r) + ' = ' + val(d, r, env, 2).replace(/ ≈.*/, ''); } },
-    expect: { f: 'E(X) = x₁p₁ + x₂p₂ + ⋯ + xₙpₙ', ex: function (d, a, env) { return '1×½ + 2×⅓ + ' + a + '×⅙ = ' + val(d, a, env, 0); } },
+    expect: { f: 'E(X) = x₁p₁ + x₂p₂ + ⋯ + xₙpₙ', ex: function (d, a, env) { return '1×1/2 + 2×1/3 + ' + a + '×1/6 = ' + val(d, a, env, 0); } },
     bin: { f: 'E(X) = np,  V(X) = npq', ex: function (d, v, env) {
       var m = val(d, v, env, 0).match(/B\((\d+), ([\d.]+)\)/); if (!m) return val(d, v, env, 1);
       var n = +m[1], p = +m[2], q = Math.round((1 - p) * 100) / 100;
@@ -1846,7 +1997,7 @@ var KEYS = (function () {
     norm: { f: 'Z = (X − m)/σ', ex: function (d, s) { return 'Z = (70 − 60)/' + s + ' = ' + MX.fx(10 / s, 2); } },
     xbar: { f: 'E(X̄) = m,  σ(X̄) = σ/√n', ex: function (d, n, env) { return 'σ(X̄) = 1.708/√' + n + ' = ' + val(d, n, env, 2); } },
     ci: { f: 'x̄ − 1.96·σ/√n ≤ m ≤ x̄ + 1.96·σ/√n', ex: function (d, n, env) { return '구간의 길이 2×1.96×10/√' + n + ' = ' + val(d, n, env, 1); } },
-    prop: { f: 'p̂ − 1.96√(p̂q̂/n) ≤ p ≤ p̂ + 1.96√(p̂q̂/n)', ex: function (d, n, env) { return 'p=0.4이면 구간의 길이 ≈ 2×1.96×√(0.4×0.6/' + n + ') = ' + MX.fx(2 * 1.96 * Math.sqrt(0.24 / n), 4); } }
+    prop: { f: 'p̂ − 1.96√(p̂q̂/n) ≤ p ≤ p̂ + 1.96√(p̂q̂/n)', ex: function (d, n, env) { return 'p=0.4이면 구간의 길이 ≈ 2×1.96×√((0.4×0.6)/' + n + ') = ' + MX.fx(2 * 1.96 * Math.sqrt(0.24 / n), 4); } }
   };
 })();
 if (typeof module !== 'undefined') module.exports = { KEYS: KEYS };
@@ -1946,12 +2097,13 @@ var INK = (function () {
   var HAND = '"Nanum Pen Script","Segoe Print","Comic Sans MS",cursive';
   function drawTag(cv, text, o) {
     var c = cv.getContext('2d'); c.clearRect(0, 0, cv.width, cv.height);
-    var fs = 76; c.font = fs + 'px ' + HAND;
-    var w = c.measureText(text).width; if (w > 210) { fs = Math.floor(fs * 210 / w); c.font = fs + 'px ' + HAND; w = c.measureText(text).width; }
-    var bw = Math.max(70, w + 34), bh = 84, x = 128 - bw / 2, y = 64 - bh / 2;
+    /* 8차: 꼬리표 글도 책장과 같은 방식(첨자·세로 분수)으로 그림. 분수가 있으면 위아래 공간이 필요해 글자를 줄임 */
+    var frac = typeof MATH !== 'undefined' && MATH.hasFrac(text), fs = frac ? 54 : 76;
+    var w = PAGES.measureLine(c, text, fs, '', HAND); if (w > 210) { fs = Math.floor(fs * 210 / w); w = PAGES.measureLine(c, text, fs, '', HAND); }
+    var bw = Math.max(70, w + 34), bh = frac ? 104 : 84, x = 128 - bw / 2, y = 64 - bh / 2;
     c.fillStyle = 'rgba(255,253,246,0.94)'; c.strokeStyle = '#2a2833'; c.lineWidth = 3;
     c.beginPath(); if (c.roundRect) c.roundRect(x, y, bw, bh, 8); else c.rect(x, y, bw, bh); c.fill(); c.stroke();
-    c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = (o && o.color) || '#2a2833'; c.fillText(text, 128, 68);
+    PAGES.fitText(c, text, 128, 64 + fs * (frac ? 0.3 : 0.32), 1e9, fs, '', HAND, (o && o.color) || '#2a2833', 'center');
   }
 
   /* 레슨의 build3d(X)에 넘기는 도우미 H */
@@ -2025,54 +2177,70 @@ var PAGES = (function () {
 
   /* ── 글자 배치 (굵게 <b> 지원, 한글은 글자 단위 줄바꿈) ──
      6차: ₙ ᵣ ₊ ² ⁿ 같은 아래·위 첨자 유니코드는 글꼴마다 모양·크기가 달라 수식이 깨져 보였음
-          → 보통 글자로 바꾼 뒤 작게(0.66배) 내려(아래 첨자)·올려(위 첨자) 직접 그림 */
-  var SUBC = '₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₐₑₒₓₕₖₗₘₙₚₛₜᵢⱼᵣᵤᵥ', SUBN = '0123456789+−=()aeoxhklmnpstijruv';
-  var SUPC = '⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿⁱʳᶜˣᵏᵃᵇ', SUPN = '0123456789+−=()nircxkab';
+          → 보통 글자로 바꾼 뒤 작게(0.66배) 내려(아래 첨자)·올려(위 첨자) 직접 그림
+     8차: a/b 꼴 분수는 세로 분수(분자 위·분모 아래, 가운데 가로선)로 그림 (분수 찾기는 math.js) */
+  var SUBC = MATH.SUBC, SUBN = MATH.SUBN, SUPC = MATH.SUPC, SUPN = MATH.SUPN;
   function decode(s) { return s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"'); }
+  function glyphs(s, b) {
+    return s.split('').map(function (ch) {
+      var i = SUBC.indexOf(ch), j = SUPC.indexOf(ch);
+      return i >= 0 ? { ch: SUBN[i], b: b, s: 1 } : j >= 0 ? { ch: SUPN[j], b: b, s: 2 } : { ch: ch, b: b, s: 0 };
+    });
+  }
   function chars(html) {
     var out = [], b = false;
     String(html).replace(/<br\s*\/?>/gi, '\n').split(/(<[^>]+>)/).forEach(function (p) {
       if (/^<b>$/i.test(p) || /^<strong>$/i.test(p)) b = true;
       else if (/^<\/b>$/i.test(p) || /^<\/strong>$/i.test(p)) b = false;
       else if (/^</.test(p)) { /* 다른 태그는 버림 */ }
-      else decode(p).split('').forEach(function (ch) {
-        var i = SUBC.indexOf(ch), j = SUPC.indexOf(ch);
-        if (i >= 0) out.push({ ch: SUBN[i], b: b, s: 1 }); else if (j >= 0) out.push({ ch: SUPN[j], b: b, s: 2 }); else out.push({ ch: ch, b: b, s: 0 });
+      else MATH.segments(decode(p)).forEach(function (g) {
+        if (g.t === 's') Array.prototype.push.apply(out, glyphs(g.s, b));
+        else out.push({ ch: '', b: b, s: 0, frac: { n: glyphs(g.n, b), d: glyphs(g.d, b) } });
       });
     });
     return out;
   }
   function plain(html) { return String(html).replace(/<[^>]+>/g, ''); }
-  /* HTML 화면용: 첨자 유니코드를 <sub>·<sup> 로 바꿔 글꼴에 상관없이 고르게 보이게 */
-  var reSub = new RegExp('[' + SUBC + ']+', 'g'), reSup = new RegExp('[' + SUPC + ']+', 'g');
-  function mh(s) {
-    var map = function (str, from, to) { return str.split('').map(function (ch) { return to[from.indexOf(ch)]; }).join(''); };
-    return String(s).replace(reSub, function (m) { return '<sub>' + map(m, SUBC, SUBN) + '</sub>'; }).replace(reSup, function (m) { return '<sup>' + map(m, SUPC, SUPN) + '</sup>'; });
-  }
+  /* HTML 화면용 수식(첨자·분수·낭독용 글)은 math.js 에서 만듦 */
+  var mh = MATH.html;
   /* 쪽 전체 글자 배율: 내용이 넘치면 쪽을 다시 그리며 조금씩 줄임 */
   var K = 1, trunc = [];
   function fz(n) { return Math.round(n * K); }
-  var SS = 0.66;                                   /* 첨자 크기 비율 */
+  var SS = 0.66, FR = 0.7;                         /* 첨자 크기 비율, 분수 글자 크기 비율 */
   /* 글자 하나 그리기·재기 도우미 (첨자 포함) */
   function fonts(size, o) {
     var font = o.font || SERIF, w = o.weight || 400, ss = Math.max(8, Math.round(size * SS));
     return { size: size, n: w + ' ' + size + 'px ' + font, b: '700 ' + size + 'px ' + font, sn: w + ' ' + ss + 'px ' + font, sb: '700 ' + ss + 'px ' + font };
   }
   function fontOf(F, q, bold) { var bb = q.b || bold; return q.s ? (bb ? F.sb : F.sn) : (bb ? F.b : F.n); }
-  function drawRun(c, ln, x, y, F, bold, cw) {
+  /* 한 크기의 글자 폭 재기 (캐시) */
+  function meter(c, F, bold) {
+    var cache = {};
+    return function (q) { var k = (q.b ? 'b' : 'n') + q.s + q.ch; if (cache[k] === undefined) { c.font = fontOf(F, q, bold); cache[k] = c.measureText(q.ch).width; } return cache[k]; };
+  }
+  function sumW(list, w) { return list.reduce(function (a, q) { return a + w(q); }, 0); }
+  function drawPlain(c, list, x, y, F, bold, w) {
     var xx = x;
+    list.forEach(function (q) { c.font = fontOf(F, q, bold); c.fillText(q.ch, xx, y + (q.s === 1 ? F.size * 0.24 : q.s === 2 ? -F.size * 0.36 : 0)); xx += w(q); });
+  }
+  function drawRun(c, ln, x, y, L, bold) {
+    var xx = x, F = L.F;
     ln.forEach(function (q) {
-      c.font = fontOf(F, q, bold);
-      c.fillText(q.ch, xx, y + (q.s === 1 ? F.size * 0.24 : q.s === 2 ? -F.size * 0.36 : 0));
-      xx += cw(q);
+      if (q.frac) {                                 /* 세로 분수 */
+        var w = L.cw(q), nw = sumW(q.frac.n, L.cwF), dw = sumW(q.frac.d, L.cwF), cx = xx + w / 2;
+        drawPlain(c, q.frac.n, cx - nw / 2, y - F.size * 0.42, L.Ff, bold, L.cwF);
+        drawPlain(c, q.frac.d, cx - dw / 2, y + F.size * 0.36, L.Ff, bold, L.cwF);
+        c.fillRect(xx + F.size * 0.06, y - F.size * 0.29, w - F.size * 0.12, Math.max(1, F.size * 0.055));
+      } else { c.font = fontOf(F, q, bold); c.fillText(q.ch, xx, y + (q.s === 1 ? F.size * 0.24 : q.s === 2 ? -F.size * 0.36 : 0)); }
+      xx += L.cw(q);
     });
     return xx - x;
   }
   /* o: {size, min(줄 수가 넘치면 이 크기까지 줄임), font, color, lh, bold, weight, max(최대 줄 수), tag} → 마지막 y 반환
      3차: 말줄임(…)은 글자를 최소 크기까지 줄여도 안 들어갈 때만 쓰고, 그 경우 trunc 에 기록 */
   function layout(c, cs, w, size, o) {
-    var F = fonts(size, o), wcache = {};
-    function cw(q) { var k = (q.b ? 'b' : 'n') + q.s + q.ch; if (wcache[k] === undefined) { c.font = fontOf(F, q, o.bold); wcache[k] = c.measureText(q.ch).width; } return wcache[k]; }
+    var F = fonts(size, o), Ff = fonts(Math.max(8, Math.round(size * FR)), o), cwP = meter(c, F, o.bold), cwF = meter(c, Ff, o.bold);
+    function cw(q) { return q.frac ? Math.max(sumW(q.frac.n, cwF), sumW(q.frac.d, cwF)) + size * 0.24 : cwP(q); }
     var lines = [], line = [], width = 0, lastSpace = -1;
     cs.forEach(function (x) {
       if (x.ch === '\n') { lines.push(line); line = []; width = 0; lastSpace = -1; return; }
@@ -2087,7 +2255,7 @@ var PAGES = (function () {
       line.push(x); width += ww;
     });
     if (line.length) lines.push(line);
-    return { lines: lines, cw: cw, F: F };
+    return { lines: lines, cw: cw, cwF: cwF, F: F, Ff: Ff };
   }
   function para(c, html, x, y, w, o) {
     o = o || {}; var base = fz(o.size || 26), min = Math.min(base, fz(o.min || o.size || 26)), size = base, cs = chars(html), L;
@@ -2098,11 +2266,16 @@ var PAGES = (function () {
       lines = lines.slice(0, o.max); var l = lines[o.max - 1]; while (l.length && l.reduce(function (s, q) { return s + cw(q); }, 0) > w - cw(ell)) l.pop(); l.push(ell);
     }
     c.fillStyle = o.color || INKC; c.textBaseline = 'alphabetic'; c.textAlign = 'left';
-    lines.forEach(function (ln, k) { drawRun(c, ln, x, y + k * lh + size, L.F, o.bold, cw); });
+    lines.forEach(function (ln, k) { drawRun(c, ln, x, y + k * lh + size, L, o.bold); });
     return y + lines.length * lh;
   }
   function text(c, s, x, y, font, color, align) { c.font = font; c.fillStyle = color || INKC; c.textAlign = align || 'left'; c.textBaseline = 'alphabetic'; c.fillText(s, x, y); }
-  /* 한 줄 글(첨자 포함): maxW 를 넘으면 글자 크기를 줄여서 맞춤. align: left | right | center */
+  /* 한 줄 글(첨자·분수 포함)의 폭 */
+  function measureLine(c, s, size, pre, font) {
+    var o = { font: font, weight: pre && /\d/.test(pre) ? pre : 400 }, cs = chars(s).filter(function (q) { return q.ch !== '\n'; }), L = layout(c, cs, 1e9, size, o);
+    return cs.reduce(function (t, q) { return t + L.cw(q); }, 0);
+  }
+  /* 한 줄 글(첨자·분수 포함): maxW 를 넘으면 글자 크기를 줄여서 맞춤. align: left | right | center */
   function fitText(c, s, x, y, maxW, size, pre, font, color, align) {
     var o = { font: font, weight: pre && /\d/.test(pre) ? pre : 400 }, cs = chars(s).filter(function (q) { return q.ch !== '\n'; });
     size = fz(size);
@@ -2110,7 +2283,7 @@ var PAGES = (function () {
     if (tw > maxW) { size = Math.max(10, Math.floor(size * maxW / tw)); L = layout(c, cs, 1e9, size, o); tw = cs.reduce(function (t, q) { return t + L.cw(q); }, 0); }
     var x0 = align === 'right' ? x - tw : align === 'center' ? x - tw / 2 : x;
     c.fillStyle = color || INKC; c.textAlign = 'left'; c.textBaseline = 'alphabetic';
-    drawRun(c, cs, x0, y, L.F, false, L.cw);
+    drawRun(c, cs, x0, y, L, false);
     return size;
   }
   function rrect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
@@ -2277,7 +2450,7 @@ var PAGES = (function () {
     var R = MX.rng(5); for (var i = 0; i < 9000; i++) { c.fillStyle = 'rgba(120,70,0,' + (R() * 0.06) + ')'; c.fillRect(R() * W, R() * H, 2, 2); }
     c.strokeStyle = 'rgba(110,62,0,0.65)'; c.lineWidth = 4; c.strokeRect(46, 46, W - 92, H - 92); c.lineWidth = 1.5; c.strokeRect(62, 62, W - 124, H - 124);
     text(c, '확률과 통계', W / 2, 250, '900 120px ' + SERIF, '#5a3500', 'center');
-    text(c, '3D 교과서 · 예측하고 실험하고 증명하기', W / 2, 322, '500 40px ' + SERIF, '#6b4300', 'center');
+    text(c, '3D 교과서 · 예측하고 실험하고 이유 확인하기', W / 2, 322, '500 40px ' + SERIF, '#6b4300', 'center');
     /* 붙인 그림 종이 */
     var px = 230, py = 430, pw = 640, ph = 700;
     c.fillStyle = 'rgba(0,0,0,0.12)'; c.fillRect(px + 10, py + 12, pw, ph);
@@ -2298,7 +2471,7 @@ var PAGES = (function () {
   }
 
   /* 쪽 캔버스 좌표 → 책장 위치(0~1) */
-  return { PW: PW, PH: PH, FLAP: FLAP, STAMP: STAMP, make: make, copy: copy, drawLeft: drawLeft, drawRight: drawRight, fitSvg: fitSvg, mh: mh, drawCover: drawCover, plain: plain, MARK: MARK, HAND: HAND, SERIF: SERIF, SANS: SANS };
+  return { PW: PW, PH: PH, FLAP: FLAP, STAMP: STAMP, make: make, copy: copy, drawLeft: drawLeft, drawRight: drawRight, fitSvg: fitSvg, mh: mh, fitText: fitText, measureLine: measureLine, drawCover: drawCover, plain: plain, MARK: MARK, HAND: HAND, SERIF: SERIF, SANS: SANS };
 })();
 
 /* book.js — 책상 위의 3D 책: 표지 열기, 책장 넘기기, 덮개, 도장, 모형 세우기, 카메라 */
@@ -2824,7 +2997,7 @@ function BookWorld(T, canvas) {
   function stepNo() { return S.aOk ? 5 : S.revealed ? (S.aChecked ? 4 : 3) : S.started ? 2 : 1; }
   var STEP_TXT = ['', '예측 — 내 답을 먼저 골라요', '실험 — 슬라이더를 움직이거나 모형을 눌러 보세요', '정답 — 덮개 아래 이유를 확인해요', '도전 — 다른 상황에 적용해 봐요', '완료 — 도장 쾅! 다음 레슨으로 ▶'];
   function setCap(num, txt, n, on) {
-    $('#capNum').textContent = num; $('#capTxt').textContent = txt;
+    $('#capNum').textContent = num; $('#capTxt').innerHTML = mh(txt);   /* 8차: 시연 자막의 수식도 첨자·분수로 */
     var h = ''; for (var i = 0; i < n; i++) h += '<i' + (i === on ? ' class="on"' : '') + '></i>'; $('#capDots').innerHTML = h;
   }
   function updateBar() {
@@ -2976,7 +3149,7 @@ function BookWorld(T, canvas) {
       '<tr><th scope="row">수치의 출처</th><td>' + t.data + '</td></tr>' +
       '<tr><th scope="row">생략·가정한 조건</th><td>' + d.omitted + '</td></tr>' +
       '<tr><th scope="row">기준</th><td>2022 개정 교육과정 「확률과 통계」(교육부 고시 제2022-33호)의 성취기준과 용어·기호를 기준으로 했습니다. 상황·수치·문제는 모두 이 교재가 새로 만든 가상의 것이며 특정 교과서의 예제·문제를 옮기지 않았습니다.</td></tr>' +
-      '<tr><th scope="row">연출 참고</th><td>Techartist의 Every Joule(iamtechartist.com)에서 “책상 위 3D 책, 잉크 모형, 예측·실험·증명, 정답 덮개, 도장”의 아이디어만 참고했습니다. 그 책의 코드·그림·글은 사용하지 않았습니다.</td></tr>' +
+      '<tr><th scope="row">연출 참고</th><td>Techartist의 Every Joule(iamtechartist.com)에서 “책상 위 3D 책, 잉크 모형, 예측·실험·확인의 흐름, 정답 덮개, 도장”의 아이디어만 참고했습니다. 그 책의 코드·그림·글은 사용하지 않았습니다.</td></tr>' +
       '</tbody></table>';
   }
   function teacherTab(which) {
