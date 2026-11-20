@@ -302,7 +302,7 @@
       '<tr><th scope="row">핵심 공식·정의</th><td>' + mh(d.concept) + '</td></tr>' +
       '<tr><th scope="row">수치의 출처</th><td>' + t.data + '</td></tr>' +
       '<tr><th scope="row">생략·가정한 조건</th><td>' + d.omitted + '</td></tr>' +
-      '<tr><th scope="row">기준 교재</th><td>천재교육 「확률과 통계」(류희찬 외) 학생용·교사용 교과서의 용어·공식. 쪽수는 판에 따라 달라 단원 이름으로만 적었습니다.</td></tr>' +
+      '<tr><th scope="row">기준</th><td>2022 개정 교육과정 「확률과 통계」(교육부 고시 제2022-33호)의 성취기준과 용어·기호를 기준으로 했습니다. 상황·수치·문제는 모두 이 교재가 새로 만든 가상의 것이며 특정 교과서의 예제·문제를 옮기지 않았습니다.</td></tr>' +
       '<tr><th scope="row">연출 참고</th><td>Techartist의 Every Joule(iamtechartist.com)에서 “책상 위 3D 책, 잉크 모형, 예측·실험·증명, 정답 덮개, 도장”의 아이디어만 참고했습니다. 그 책의 코드·그림·글은 사용하지 않았습니다.</td></tr>' +
       '</tbody></table>';
   }

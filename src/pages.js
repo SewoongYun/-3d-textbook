@@ -201,8 +201,10 @@ var PAGES = (function () {
       c.fillStyle = 'rgba(255,252,243,0.92)'; rrect(c, FLAP.x, FLAP.y, FLAP.w, FLAP.h, 10); c.fill();
       c.setLineDash([8, 7]); c.strokeStyle = 'rgba(42,40,51,0.45)'; c.lineWidth = 2; c.stroke(); c.setLineDash([]);
       text(c, '정답', FLAP.x + 22, FLAP.y + 38, '700 20px ' + SANS, RED);
-      para(c, MARK[st.order.indexOf(okIdx)] + ' ' + d.predict.options[okIdx].t, FLAP.x + 80, FLAP.y + 12, FLAP.w - 250, { size: 25, min: 17, weight: 700, max: 1, tag: '정답' });
-      para(c, d.predict.options[okIdx].why, FLAP.x + 22, FLAP.y + 54, FLAP.w - 180, { size: 20, min: 15, font: SANS, max: 4, lh: 30, color: '#3c3a44', tag: '정답 이유' });
+      /* 7차: 정답 보기가 길면 두 줄까지 쓰고, 그만큼 이유 글을 아래로 내림 */
+      var ay = para(c, MARK[st.order.indexOf(okIdx)] + ' ' + d.predict.options[okIdx].t, FLAP.x + 80, FLAP.y + 12, FLAP.w - 250, { size: 25, min: 17, weight: 700, max: 2, lh: 30, tag: '정답' });
+      var wy = Math.max(FLAP.y + 54, ay + 4);
+      para(c, d.predict.options[okIdx].why, FLAP.x + 22, wy, FLAP.w - 180, { size: 20, min: 14, font: SANS, max: wy > FLAP.y + 60 ? 3 : 4, lh: 30, color: '#3c3a44', tag: '정답 이유' });
     } else {
       c.setLineDash([8, 7]); c.strokeStyle = 'rgba(42,40,51,0.25)'; c.lineWidth = 2; rrect(c, FLAP.x, FLAP.y, FLAP.w, FLAP.h, 10); c.stroke(); c.setLineDash([]);
     }
