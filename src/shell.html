@@ -41,6 +41,7 @@
     <div class="row wrap">
       <button type="button" class="btn primary" id="btnOpen">책 펼치기 ▶</button>
       <button type="button" class="btn ghost" id="btnCoverToc">목차</button>
+      <button type="button" class="btn ghost" id="btnCoverGraph">개념 연결 지도</button>
     </div>
     <p class="note">아래 조작 바: ◀ ▶ 레슨 넘기기 · ▷ 시연 보기(스페이스 일시정지, Esc 멈춤) · 📝 글 화면(번역·읽어 주기용). 3D가 안 보이면 글 화면으로 같은 내용을 배울 수 있어요.</p>
   </section>
@@ -131,8 +132,17 @@
   <div id="tocList"></div>
 </nav>
 
+<section id="graph" class="glass graphPanel" role="dialog" aria-labelledby="graphH" hidden>
+  <div class="ghead"><p class="kicker">연결</p><h2 id="graphH">개념 연결 지도</h2>
+    <p class="glegend" aria-hidden="true"><span class="lg u0"></span>경우의 수 <span class="lg u1"></span>확률 <span class="lg u2"></span>통계 <span class="lg c"></span>공통 개념 <span class="lg d"></span>도장 받은 레슨</p>
+    <button type="button" class="x" id="graphClose" aria-label="연결 지도 닫기">✕</button></div>
+  <div class="gbody"><svg id="gSvg" class="gsvg" role="group" aria-label="레슨과 공통 개념을 선으로 이은 지도. 레슨 점을 누르면 그 레슨으로 들어갑니다."></svg><div class="ginfo" id="gInfo" aria-live="polite"></div></div>
+  <details class="glist"><summary>목록으로 보기</summary><div id="gList"></div></details>
+</section>
+
 <div class="pill glass" id="pill" role="toolbar" aria-label="책 조작">
   <button type="button" class="ib" id="btnToc" aria-label="목차" aria-expanded="false" aria-controls="toc"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <button type="button" class="ib" id="btnGraph" aria-label="개념 연결 지도" aria-expanded="false" aria-controls="graph"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.6 8.6l3.3 6.2M16.4 8.1l-3.2 6.7M8.3 6.8l7.4-.6"/><circle cx="6" cy="7" r="2.2"/><circle cx="18" cy="6" r="2.2"/><circle cx="12" cy="17.5" r="2.8" class="fill"/></svg></button>
   <button type="button" class="ib" id="btnPrev" aria-label="이전 레슨"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
   <button type="button" class="ib" id="btnDemo" aria-label="시연 보기" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" id="icoDemo"><path d="M8 5l11 7-11 7z" class="fill"/></svg></button>
   <div class="cap" id="cap" role="status" aria-live="polite"><span class="num" id="capNum"></span><span class="txt" id="capTxt">표지</span><span class="dots" id="capDots" aria-hidden="true"></span></div>

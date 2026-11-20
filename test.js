@@ -133,5 +133,16 @@ ok(cell('norm', 10, 'P(X ≥ 70)').length > 0 && cell('norm', 10, 'P(X ≥ 70)')
   /* 화면에 보이는 모든 글에서 분수로 잘못 잡힌 것(분자·분모에 한글)이 없는지 */
   L.forEach(d => { [d.concept, d.situation, d.predict.q, d.apply.q, ...d.terms.flat(), ...d.predict.options.flatMap(o => [o.t, o.why]), ...d.apply.options.flatMap(o => [o.t, o.why])].forEach(s => MATH.segments(s).forEach(g => { if (g.t === 'f') ok(!/[가-힣\s]/.test(g.n + g.d), d.id + ' 분수 조각 이상: ' + g.n + '/' + g.d); })); }); }
 
+// 9차: 개념 연결 지도 (graph.js) — 모든 점이 실제 레슨·개념이고, 지도가 한 덩어리로 이어지는지
+{ vm.runInContext(fs.readFileSync(path.join(__dirname, 'src', 'graph.js'), 'utf8'), ctx, { filename: 'graph.js' });
+  const GR = vm.runInContext('GRAPH', ctx), ids = new Set(L.map(d => d.id).concat(GR.CONCEPTS.map(c => c[0])));
+  GR.EDGES.forEach(e => ok(ids.has(e[0]) && ids.has(e[1]) && e[0] !== e[1] && e[2], '연결 ' + e[0] + '–' + e[1] + ' 이름·설명'));
+  const keys = GR.EDGES.map(e => [e[0], e[1]].sort().join('|')); ok(new Set(keys).size === keys.length, '연결 중복 없음');
+  const G = GR.data(L); ok(G.edges.length === GR.EDGES.length, '연결 수 ' + G.edges.length);
+  G.nodes.forEach(n => ok(n.nb.length >= (n.kind === 'lesson' ? 1 : 2), n.id + ' 이웃 ' + n.nb.length + '개'));
+  G.nodes.filter(n => n.kind === 'concept').forEach(n => ok(n.nb.some(m => m.n.kind === 'lesson'), n.id + ' 레슨과 이어짐'));
+  const seen = new Set([G.nodes[0]]), q = [G.nodes[0]]; while (q.length) q.shift().nb.forEach(m => { if (!seen.has(m.n)) { seen.add(m.n); q.push(m.n); } });
+  ok(seen.size === G.nodes.length, '지도가 한 덩어리 (' + seen.size + '/' + G.nodes.length + ')'); }
+
 console.log(fail ? '\n실패 ' + fail + '건 / 통과 ' + pass + '건' : '\n모든 검사 통과 (' + pass + '건)');
 process.exit(fail ? 1 : 0);

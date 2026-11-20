@@ -183,8 +183,20 @@
     });
   }
   function toggleToc(open) {
-    var t = $('#toc'); if (open === undefined) open = t.hidden; t.hidden = !open; $('#btnToc').setAttribute('aria-expanded', String(open));
+    var t = $('#toc'); if (open === undefined) open = t.hidden; if (open) toggleGraph(false); t.hidden = !open; $('#btnToc').setAttribute('aria-expanded', String(open));
     if (open) { var a = $('a[aria-current]', t) || $('a', t); if (a) a.focus(); }
+  }
+
+  /* ───────── 9차: 개념 연결 지도 (레슨 점을 누르면 그 레슨으로) ───────── */
+  function drawGraph() {
+    GRAPH.mount($('#gSvg'), $('#gInfo'), { lessons: L, current: S.idx, stamps: stamps, still: !!prefs.still, onGo: function (i) { toggleGraph(false); if (i !== S.idx) goLesson(i); } });
+  }
+  function toggleGraph(open) {
+    var g = $('#graph'); if (open === undefined) open = g.hidden;
+    if (open === !g.hidden) return;
+    if (open) { $('#toc').hidden = true; $('#btnToc').setAttribute('aria-expanded', 'false'); stopDemo(true); }
+    g.hidden = !open; $('#btnGraph').setAttribute('aria-expanded', String(open));
+    if (open) { if (!$('#gList').innerHTML) $('#gList').innerHTML = GRAPH.listHtml(L); drawGraph(); $('#graphClose').focus(); }
   }
 
   /* ───────── 레슨 그리기 ───────── */
@@ -481,6 +493,10 @@
     $('#btnOpen').addEventListener('click', function () { goLesson(0); });
     $('#btnCoverToc').addEventListener('click', function () { toggleToc(true); });
     $('#btnToc').addEventListener('click', function () { toggleToc(); });
+    $('#btnGraph').addEventListener('click', function () { toggleGraph(); });
+    $('#btnCoverGraph').addEventListener('click', function () { toggleGraph(true); });
+    $('#graphClose').addEventListener('click', function () { toggleGraph(false); $('#btnGraph').focus(); });
+    var gT = 0; window.addEventListener('resize', function () { clearTimeout(gT); gT = setTimeout(function () { if (!$('#graph').hidden) drawGraph(); }, 200); });
     $('#tocClose').addEventListener('click', function () { toggleToc(false); $('#btnToc').focus(); });
     $('#toc').addEventListener('click', function (e) { if (e.target.closest('a')) toggleToc(false); });
     $('#btnPrev').addEventListener('click', function () { if (S.busy) return; goLesson(S.idx - 1); });
@@ -500,10 +516,10 @@
     $('#zOut').addEventListener('click', function () { if (world) world.orbit(0, 0, 1.28); });
     $('#zHome').addEventListener('click', function () { if (world) world.resetUser(); });
     $('#btnMode').addEventListener('click', function () { stopDemo(true); setMode(isBook() ? 'text' : 'book', true); });
-    window.addEventListener('hashchange', function () { toggleToc(false); route(); });
+    window.addEventListener('hashchange', function () { toggleToc(false); toggleGraph(false); route(); });
     document.addEventListener('keydown', function (e) {
       var tag = (document.activeElement && document.activeElement.tagName) || '', typing = /INPUT|TEXTAREA|SELECT/.test(tag);
-      if (e.key === 'Escape') { if (demo) stopDemo(); else if (!$('#toc').hidden) toggleToc(false); else if (S.panel && isBook()) { S.panel = null; layout(); } return; }
+      if (e.key === 'Escape') { if (demo) stopDemo(); else if (!$('#graph').hidden) { toggleGraph(false); $('#btnGraph').focus(); } else if (!$('#toc').hidden) toggleToc(false); else if (S.panel && isBook()) { S.panel = null; layout(); } return; }
       if (e.key === ' ' && demo && !typing && tag !== 'BUTTON') { e.preventDefault(); pauseDemo(); return; }
       if (!isBook() || typing || document.activeElement === $('#scene')) return;
       if (document.activeElement === document.body || document.activeElement === $('#lTitle')) {

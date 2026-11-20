@@ -199,6 +199,46 @@ body.text .foot { display: block; font-size: 13px; color: var(--muted); }
 body.text .panel:not([data-locked]) .lock { display: none; }
 body.book .lock { display: none; }
 
+/* ── 9차: 개념 연결 지도 ── */
+.graphPanel { position: fixed; left: 50%; top: 16px; bottom: 84px; transform: translateX(-50%); width: min(1120px, calc(100vw - 32px)); z-index: 31; border-radius: 18px; padding: 14px 18px 10px; background: var(--bg); display: flex; flex-direction: column; gap: 8px; }
+.ghead { position: relative; padding-right: 40px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+.ghead .kicker { margin: 0; }
+.ghead h2 { margin: 0; font-size: 20px; }
+.glegend { margin: 0; font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.glegend .lg { width: 11px; height: 11px; border-radius: 50%; display: inline-block; margin-left: 6px; }
+.lg.u0 { background: var(--blue); } .lg.u1 { background: var(--red); } .lg.u2 { background: var(--gold); }
+.lg.c { border: 2px solid var(--muted); background: var(--bg); } .lg.d { border: 2px solid var(--good); }
+.ghead .x { top: -4px; right: -6px; }
+.gbody { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 14px; }
+.gsvg { width: 100%; height: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none; border-radius: 12px; background: var(--line); }
+.ginfo { overflow: auto; font-size: 14px; line-height: 1.55; padding-right: 4px; }
+.ginfo h3 { margin: 0 0 6px; font-size: 18px; }
+.ginfo p { margin: 0 0 8px; }
+.gnb { margin: 0 0 10px; padding-left: 18px; }
+.gnb li { margin: 3px 0; }
+.glink { border: 0; background: none; padding: 0; color: var(--blue); font-weight: 700; text-decoration: underline; cursor: pointer; }
+.glist { font-size: 14px; max-height: 32vh; overflow: auto; }
+.glist summary { cursor: pointer; color: var(--muted); }
+.glist h4 { margin: 8px 0 2px; font-size: 14px; color: var(--red); }
+.glist ul { margin: 0; padding-left: 18px; }
+.glist a { color: var(--blue); font-weight: 700; }
+.ge { stroke: var(--muted); stroke-opacity: .32; stroke-width: 1.2; transition: stroke-opacity .2s; }
+.ge.ll { stroke-opacity: .5; stroke-width: 1.6; }
+.gn { cursor: pointer; outline: none; }
+.gn .dot { stroke: var(--bg); stroke-width: 2; transition: opacity .2s; }
+.gn.u0 .dot { fill: var(--blue); } .gn.u1 .dot { fill: var(--red); } .gn.u2 .dot { fill: var(--gold); }
+.gn.concept .dot { fill: var(--bg); stroke: var(--muted); stroke-width: 2.2; }
+.gn .ring { fill: none; stroke: none; stroke-width: 2.5; }
+.gn.done .ring { stroke: var(--good); }
+.gn.cur .ring { stroke: var(--ink); stroke-dasharray: 3 3; }
+.gn:focus-visible .ring, .gn.me .ring { stroke: var(--blue); stroke-dasharray: none; }
+.gl { font: 600 14px var(--serif); fill: var(--ink); paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round; pointer-events: none; transition: opacity .2s; }
+.gn.concept .gl { font: 500 12px var(--sans); fill: var(--muted); }
+.gsvg.hl .gn:not(.me):not(.nb) .dot, .gsvg.hl .gn:not(.me):not(.nb) .gl { opacity: .18; }
+.gsvg.hl .ge { stroke-opacity: .07; }
+.gsvg.hl .ge.on { stroke: var(--ink); stroke-opacity: .85; stroke-width: 2; }
+body.still .ge, body.still .gn .dot, body.still .gl { transition: none; }
+
 /* ── 좁은 화면: 패널은 아래에서 올라오는 시트 ── */
 @media (max-width: 760px) {
   body.book .panel.side, body.book .panel.try, body.book .panel.side.wide { left: 8px; right: 8px; top: auto; bottom: 74px; width: auto; max-height: 42vh; border-radius: 16px; }
@@ -212,5 +252,9 @@ body.book .lock { display: none; }
   .cap .dots { display: none; }
   #btnTheme, #btnTeach, .sep { display: none; }
   .toast { bottom: 64px; }
+  .graphPanel { top: 8px; bottom: 66px; width: calc(100vw - 16px); padding: 10px 12px 8px; }
+  .gbody { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  .ginfo { max-height: 24vh; font-size: 13px; }
+  .glegend { font-size: 12px; }
 }
 @media (prefers-reduced-motion: reduce) { .panel.open { animation: none !important; } }
